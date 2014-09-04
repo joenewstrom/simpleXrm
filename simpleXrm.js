@@ -49,7 +49,7 @@ simpleXrm.getAttVal = function(a) {
 
 simpleXrm.setAttVal = function(a,v) {
 	if (simpleXrm.validAtt(a) && simpleXrm.valid(v)) {
-		getAtt(a).setValue(v);
+		simpleXrm.getAtt(a).setValue(v);
 	} else if (!simpleXrm.validAtt(a)) {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
 	} else if (!simpleXrm.valid(v)) {
@@ -65,9 +65,21 @@ simpleXrm.setAttVal = function(a,v) {
 
 simpleXrm.sendAttAlways = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		getAtt(a).setSubmitMode("always");
+		simpleXrm.getAtt(a).setSubmitMode("always");
 	} else {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
+	}
+}
+
+//sendAttsAlways() includes the current values of all attributes 'a1', 'a2', etc. passed as arguments
+//to the function in the XML form data submitted to the server
+//sample usage: simpleXrm.sendAttsAlways(companyname,firstname,lastname,fullname) 
+//will send the values of attributes 'companyname', 'firstname', 'lastname', and
+//'fullname' to the server regardless of whether the field value was modified ('dirty') or whether the field is marked 'read only'
+
+simpleXrm.sendAttsAlways = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.sendAttAlways(arguments[i]);
 	}
 }
 
@@ -77,9 +89,21 @@ simpleXrm.sendAttAlways = function(a) {
 
 simpleXrm.sendAttNever = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		getAtt(a).setSubmitMode("never");
+		simpleXrm.getAtt(a).setSubmitMode("never");
 	} else {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
+	}
+}
+
+//sendAttsNever() excludes the current values of all attributes 'a1', 'a2', etc. passed as arguments
+//to the function in the XML form data submitted to the server
+//sample usage: simpleXrm.sendAttsNever(companyname,firstname,lastname,fullname) 
+//will not send the values of attributes 'companyname', 'firstname', 'lastname', and
+//'fullname' to the server regardless of whether the field values were modified ('dirty')
+
+simpleXrm.sendAttsNever = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.sendAttNever(arguments[i]);
 	}
 }
 
@@ -89,9 +113,21 @@ simpleXrm.sendAttNever = function(a) {
 
 simpleXrm.sendAttChanges = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		getAtt(a).setSubmitMode("dirty");
+		simpleXrm.getAtt(a).setSubmitMode("dirty");
 	} else {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
+	}
+}
+
+//sendAttsChanges() will only include the current values of all attributes 'a1', 'a2', etc. passed as arguments
+//to the function in the XML form data submitted to the server if each individual attribute was updated/modified
+//sample usage: simpleXrm.sendAttsChanges(companyname,firstname,lastname,fullname) 
+//will only send the values of attributes 'companyname', 'firstname', 'lastname', and
+//'fullname' to the server if the field values were updated or modified ('dirty')
+
+simpleXrm.sendAttsChanges = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.sendAttChanges(arguments[i]);
 	}
 }
 
@@ -101,7 +137,7 @@ simpleXrm.sendAttChanges = function(a) {
 
 simpleXrm.getAttReqd = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		return getAtt(a).getRequiredLevel();
+		return simpleXrm.getAtt(a).getRequiredLevel();
 	} else {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
 	}
@@ -113,37 +149,95 @@ simpleXrm.getAttReqd = function(a) {
 
 simpleXrm.setAttReqd = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		getAtt(a).setRequiredLevel("required");
+		simpleXrm.getAtt(a).setRequiredLevel("required");
 	} else {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
 	}
 }
 
+//setAttsReqd() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
+//to the function to 'required'
+//sample usage: simpleXrm.setAttsReqd(companyname,firstname,lastname,fullname) 
+//attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business required
+
+simpleXrm.setAttsReqd = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.setAttReqd(arguments[i]);
+	}
+}
+
 //clearAttReqd() sets the required status of attribute 'a' to 'none'
 //sample usage: simpleXrm.clearAttReqd(companyname) 
-//attribute 'companyname' is no longer business required
+//attribute 'companyname' is not business required
 
 simpleXrm.clearAttReqd = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		getAtt(a).setRequiredLevel("none");
+		simpleXrm.getAtt(a).setRequiredLevel("none");
 	} else {
 		console.log("Error: attribute " + a.toString() + " was not found.");
 		throw new Error;
+	}
+}
+
+//clearAttsReqd() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
+//to the function to 'none'
+//sample usage: simpleXrm.clearAttsReqd(companyname,firstname,lastname,fullname) 
+//attributes 'companyname', 'firstname', 'lastname', and 'fullname' are not business required
+
+simpleXrm.clearAttsReqd = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.clearAttReqd(arguments[i]);
 	}
 }
 
 //setAttRecommended() sets the required status of attribute 'a' to 'recommended'
 //sample usage: simpleXrm.setAttRecommended(companyname) 
-//attribute 'companyname' is now  business recommended
+//attribute 'companyname' is now business recommended
 
 simpleXrm.setAttRecommended = function(a) {
 	if (simpleXrm.validAtt(a) ) {
-		getAtt(a).setRequiredLevel("recommended");
+		simpleXrm.getAtt(a).setRequiredLevel("recommended");
 	} else {
 		console.log("Error: attribute " + a.toString() + " was not found.");
 		throw new Error;
 	}
 }
+
+//setAttsRecommended() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
+//to the function to 'recommended'
+//sample usage: simpleXrm.setAttsRecommended(companyname,firstname,lastname,fullname) 
+//attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business recommended
+
+simpleXrm.setAttsRecommended = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.setAttRecommended(arguments[i]);
+	}
+}
+
+//fireOnChange() mirrors the SDK implementation of Xrm.Page.getAttribute().fireOnChange()
+//sample usage: simpleXrm.fireOnChange(companyname)
+//triggers scripts registered on the change event of 'companyname' if it is included in the attributes collection
+
+simpleXrm.fireOnChange = function(a) {
+	if (simpleXrm.validAtt(a) ) {
+		simpleXrm.getAtt(a).fireOnChange();
+	} else {
+		console.log("Error: attribute " + a.toString() + " was not found.");
+		throw new Error;
+	}
+}
+
+//fireChanges() triggers the onChange events of all attributes 'a1', 'a2', etc.
+//passed as arguments to the function 
+//sample usage: simpleXrm.fireChanges(companyname,firstname,lastname,fullname) 
+//scripts running onChange for attributes 'companyname', 'firstname', 'lastname', and 'fullname' will now run
+
+simpleXrm.fireChanges = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.fireOnChange(arguments[i]);
+	}
+}
+
 
 //validCtrl() checks the form for control 'c'
 //sample usage: simpleXrm.validCtrl(companyname) 
@@ -196,6 +290,19 @@ simpleXrm.showCtrl = function(c) {
 	}
 }
 
+//showCtrls() shows all controls 'c1, c2, c3' passed as arguments
+//sample usage: simpleXrm.showCtrls(companyname,firstname,lastname,fullname) 
+//changes visibility of the first control for attributes 'companyname', 'firstname',
+//'lastname', and 'fullname' to visible
+//super handy! show as many or as few fields as you want in a single function call.
+
+simpleXrm.showCtrls = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.showCtrl(arguments[i]);
+	}
+}
+
+
 //hideCtrl() hides the control 'c'
 //sample usage: simpleXrm.hideCtrl(companyname) 
 //changes visibility of the first control for attribute 'companyname' to hidden
@@ -205,6 +312,18 @@ simpleXrm.hideCtrl = function(c) {
 		simpleXrm.getCtrl(c).setVisible(false);
 	} else {
 		throw new Error("Error: control " + c.toString() + " was not found or is invalid.");
+	}
+}
+
+//hideCtrls() shows all controls 'c1, c2, c3' passed as arguments
+//sample usage: simpleXrm.hideCtrls(companyname,firstname,lastname,fullname) 
+//changes visibility of the first control for attributes 'companyname', 'firstname',
+//'lastname', and 'fullname' to hidden
+//super handy! hide as many or as few fields as you want in a single function call.
+
+simpleXrm.hideCtrls = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.hideCtrl(arguments[i]);
 	}
 }
 
@@ -253,6 +372,16 @@ simpleXrm.lockCtrl = function(c) {
 	}
 }
 
+//lockCtrls() locks all controls 'c1', 'c2', 'c3' passed as arguments to the function
+//sample usage: simpleXrm.lockCtrls(companyname, firstname, lastname) 
+//locks the first control for attributes 'companyname', 'firstname', and 'lastname'
+
+simpleXrm.lockCtrls = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.lockCtrl(arguments[i]);
+	}
+}
+
 //unlockCtrl()  unlocks the control 'c'
 //sample usage: simpleXrm.unlockCtrl(companyname) 
 //unlocks the first control for attribute 'companyname'
@@ -262,6 +391,16 @@ simpleXrm.unlockCtrl = function(c) {
 		simpleXrm.getCtrl(c).setDisabled(false);
 	} else {
 		throw new Error("Error: control " + c.toString() + " was not found or is invalid.");
+	}
+}
+
+//unlockCtrls()  unlocks all controls 'c1', 'c2', 'c3' passed as arguments to the function
+//sample usage: simpleXrm.unlockCtrls(companyname, firstname, lastname) 
+//unlocks the first control for attributes 'companyname', 'firstname', and 'lastname'
+
+simpleXrm.unlockCtrls = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.unlockCtrl(arguments[i]);
 	}
 }
 
@@ -378,6 +517,16 @@ simpleXrm.showTab = function(t) {
 	}
 }
 
+//showTabS() shows all tabs 't1', 't2', 't3' passed as arguments to the function
+//sample usage: simpleXrm.showTabs(tab_1,tab_2,tab_4) 
+//changes the visibility of tab_1, tab_2, and tab_4_ to visible
+
+simpleXrm.showTabs = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.showTab(arguments[i]);
+	}
+}
+
 //hideTab() hides tab 't'
 //sample usage: simpleXrm.hideTab(tab_2) 
 //changes the visibility of tab_2 to hidden
@@ -387,6 +536,16 @@ simpleXrm.hideTab = function(t) {
 		simpleXrm.getTab(t).setVisible(false);
 	} else {
 		throw new Error("Error: target tab " + t.toString() + " was not found or is invalid.");
+	}
+}
+
+//hideTabs() hides all tabs 't1', 't2', 't3' passed as arguments to the function
+//sample usage: simpleXrm.hideTabs(tab_1,tab_2,tab_4) 
+//changes the visibility of tab_1, tab_2, and tab_4_ to hidden
+
+simpleXrm.hideTabs = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.hideTab(arguments[i]);
 	}
 }
 
@@ -437,6 +596,16 @@ simpleXrm.showSection = function (s) {
 	}
 }
 
+//showSections() shows all sections 's1', 's2', 's3' passed as arguments to the function
+//sample usage: simpleXrm.showSections(tab_1_section_3,tab_2_section_1,tab_4_section_2) 
+//changes the visibility of tab_1_section_3, tab_2_section_1, and tab_4_section_2 to visible
+
+simpleXrm.showSections = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.showSection(arguments[i]);
+	}
+}
+
 //hideSection() hides section 's'
 //sample usage: simpleXrm.hideSection(tab_2_section_1) 
 //changes the visibility of tab_2_section_1 to hidden
@@ -446,5 +615,15 @@ simpleXrm.hideSection = function (s) {
 		simpleXrm.getSection(s).setVisible(false);
 	} else {
 		throw new Error("Error: target section " + s.toString() + " was not found or is invalid.");
+	}
+}
+
+//hideSections() hides all sections 's1', 's2', 's3' passed as arguments to the function
+//sample usage: simpleXrm.hideSections(tab_1_section_3,tab_2_section_1,tab_4_section_2) 
+//changes the visibility of tab_1_section_3, tab_2_section_1, and tab_4_section_2 to hidden
+
+simpleXrm.hideSections = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.hideSection(arguments[i]);
 	}
 }
