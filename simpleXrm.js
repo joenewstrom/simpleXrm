@@ -54,17 +54,29 @@ simpleXrm.hasVal = function(a) {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
 	}
 }
-//setAttVal() sets the value of the attribute 'a' to value 'v' (requires string in quotes)
+
+//getLookupVal() returns the name of the current selection in lookup attribute 'a'
+//sample usage: simpleXrm.getAttVal(customerid)
+//returns the name of the current contact/account stored in customerid e.g. "Contoso Ltd."
+
+simpleXrm.getLookupVal = function(a) {
+	if (simpleXrm.validAtt(a) && simpleXrm.valid(simpleXrm.getAttVal(a).name)) {
+		return simpleXrm.getAttVal(a).name;
+	} else {
+		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
+	}
+}
+
+//setAttVal() sets the value of the attribute 'a' to value 'v'
 //sample usage: simpleXrm.setAttVal(companyname,"A New Company")
 //overwrites value of companyname with "A New Company"
+//check Dynamics CRM SDK for acceptable values based on different field types
 
 simpleXrm.setAttVal = function(a,v) {
-	if (simpleXrm.validAtt(a) && simpleXrm.valid(v)) {
+	if (simpleXrm.validAtt(a)) {
 		simpleXrm.getAtt(a).setValue(v);
 	} else if (!simpleXrm.validAtt(a)) {
 		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
-	} else if (!simpleXrm.valid(v)) {
-		throw new Error("Error: target value " + v.toString() + " was not found or is invalid.");
 	} else {
 		throw new Error("Error: an unexpected error has occurred; please contact your administrator.");
 	}
@@ -82,7 +94,17 @@ simpleXrm.sendAttAlways = function(a) {
 	}
 }
 
-//sendAttsAlways() includes the current values of all attributes 'a1', 'a2', etc. passed as arguments
+//clearAttsVal() clears the current value of the attribute(s) passed as arguments
+//sample usage: simpleXrm.clearAttsVal(companyname, firstname, lastname)
+//clears the current values of attributes 'companyname', 'firstname', and 'lastname'
+
+simpleXrm.clearAttsVal = function() {
+	for(i=0; i < arguments.length; i++) {
+		simpleXrm.setAttVal(arguments[i], null);
+	}
+}
+
+//sendAttsAlways() includes the current values of all attribute(s) passed as arguments
 //to the function in the XML form data submitted to the server
 //sample usage: simpleXrm.sendAttsAlways(companyname,firstname,lastname,fullname) 
 //will send the values of attributes 'companyname', 'firstname', 'lastname', and
