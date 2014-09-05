@@ -660,3 +660,17 @@ simpleXrm.hideSections = function() {
 		simpleXrm.hideSection(arguments[i]);
 	}
 }
+
+//sumAtts() adds the values of the fields passed as arguments to the function
+//sample usage: simpleXrm.sumAtts(price1, price2, price3)
+//returns the sum of the current values of price1, price2, and price3
+
+simpleXrm.sumAtts = function() {
+	var sum = 0;
+	for(i=0; i < arguments.length; i++) {
+		if(!isNaN(simpleXrm.getAttVal(arguments[i]))){
+			sum += simpleXrm.getAttVal(arguments[i]);
+		}
+	}
+	return sum;
+}
