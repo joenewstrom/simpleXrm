@@ -43,6 +43,17 @@ simpleXrm.getAttVal = function(a) {
 	}
 }
 
+//hasVal() returns the current value of the attribute 'a'
+//sample usage: simpleXrm.getAttVal(companyname)
+//returns the value of companyname e.g. "An Old Company"
+
+simpleXrm.hasVal = function(a) {
+	if (simpleXrm.validAtt(a)) {
+		return simpleXrm.valid(simpleXrm.getAttVal(a));
+	} else {
+		throw new Error("Error: attribute " + a.toString() + " was not found or is invalid.");
+	}
+}
 //setAttVal() sets the value of the attribute 'a' to value 'v' (requires string in quotes)
 //sample usage: simpleXrm.setAttVal(companyname,"A New Company")
 //overwrites value of companyname with "A New Company"
@@ -561,7 +572,7 @@ simpleXrm.validSection = function(s) {
 				function (tab, i) {
 					tab.sections.get(s.toString());
 				}
-			);
+			)
 		);
 	} else {
 		throw new Error("Error: target section " + s.toString() + " was not found or is invalid.");
