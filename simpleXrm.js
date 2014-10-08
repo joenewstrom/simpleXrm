@@ -6,7 +6,6 @@
 var simpleXrm = {};
 
 simpleXrm.error = function (e, m) {
-
     /// <summary>
     ///simpleXrm.error() returns an error message, writes to the console, and optionally presents the user with a custom message
     ///</summary>
@@ -81,7 +80,7 @@ simpleXrm.validAtt = function (a) {
     ///</summary>
     /// <param name="a" type="String">an attribute 'a' in the Xrm.Page.attributes collection</param>
     /// <returns type="Boolean" />
-    return simpleXrm.valid(Xrm.Page.getAttribute(a.toString()));
+    return (simpleXrm.valid(Xrm.Page.getAttribute(a.toString())));
 }
 
 //
@@ -264,6 +263,7 @@ simpleXrm.sendAttNever = function (a) {
 //'fullname' to the server regardless of whether the field values were modified ('dirty')
 
 simpleXrm.sendAttsNever = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.sendAttNever(arguments[i]);
     }
@@ -274,6 +274,7 @@ simpleXrm.sendAttsNever = function () {
 //only if/when the field value was modified ('dirty')
 
 simpleXrm.sendAttChanges = function (a) {
+    ////debugger;
     simpleXrm.getAtt(a).setSubmitMode("dirty");
 }
 
@@ -284,6 +285,7 @@ simpleXrm.sendAttChanges = function (a) {
 //'fullname' to the server if the field values were updated or modified ('dirty')
 
 simpleXrm.sendAttsChanges = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.sendAttChanges(arguments[i]);
     }
@@ -294,6 +296,7 @@ simpleXrm.sendAttsChanges = function () {
 //returns 'required', 'recommended', or 'none' depending on the requirement level of the attribute
 
 simpleXrm.getAttReqd = function (a) {
+    ////debugger;
     return simpleXrm.getAtt(a).getRequiredLevel();
 }
 
@@ -302,6 +305,7 @@ simpleXrm.getAttReqd = function (a) {
 //attribute 'companyname' is now business required
 
 simpleXrm.setAttReqd = function (a) {
+    ////debugger;
     simpleXrm.getAtt(a).setRequiredLevel("required");
 }
 
@@ -311,6 +315,7 @@ simpleXrm.setAttReqd = function (a) {
 //attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business required
 
 simpleXrm.setAttsReqd = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.setAttReqd(arguments[i]);
     }
@@ -321,6 +326,7 @@ simpleXrm.setAttsReqd = function () {
 //attribute 'companyname' is not business required
 
 simpleXrm.clearAttReqd = function (a) {
+    ////debugger;
     simpleXrm.getAtt(a).setRequiredLevel("none");
 }
 
@@ -352,6 +358,7 @@ simpleXrm.setAttRecommended = function (a) {
 //attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business recommended
 
 simpleXrm.setAttsRecommended = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.setAttRecommended(arguments[i]);
     }
@@ -362,6 +369,7 @@ simpleXrm.setAttsRecommended = function () {
 //triggers scripts registered on the change event of 'companyname' if it is included in the attributes collection
 
 simpleXrm.fireOnChange = function (a) {
+    ////debugger;
     if (simpleXrm.validAtt(a)) {
         simpleXrm.getAtt(a).fireOnChange();
     } else {
@@ -375,6 +383,7 @@ simpleXrm.fireOnChange = function (a) {
 //scripts running onChange for attributes 'companyname', 'firstname', 'lastname', and 'fullname' will now run
 
 simpleXrm.fireChanges = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.fireOnChange(arguments[i]);
     }
@@ -387,6 +396,7 @@ simpleXrm.fireChanges = function () {
 //(note second control for attribute 'companyname' is 'companyname1', third is 'companyname2', etc.)
 
 simpleXrm.validCtrl = function (c) {
+    ////debugger;
     if (simpleXrm.valid(c)) {
         return (simpleXrm.valid(Xrm.Page.getControl(c.toString())));
     } else {
@@ -400,6 +410,8 @@ simpleXrm.validCtrl = function (c) {
 //(note second control for attribute 'companyname' is 'companyname1', third is 'companyname2', etc.)
 
 simpleXrm.getCtrl = function (c) {
+
+    ////debugger;
     if (simpleXrm.validCtrl(c)) {
         return Xrm.Page.getControl(c.toString());
     } else {
@@ -498,6 +510,7 @@ simpleXrm.removeOption = function (a, o) {
 //changes visibility of all controls for attribute 'companyname' to visible
 
 simpleXrm.showAllCtrls = function (a) {
+    ////debugger;
     if (simpleXrm.valid(simpleXrm.getAllCtrls(a))) {
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
             x.setVisible(true);
@@ -511,6 +524,7 @@ simpleXrm.showAllCtrls = function (a) {
 
 
 simpleXrm.hideAllCtrls = function (a) {
+    ////debugger;
     if (simpleXrm.valid(simpleXrm.getAllCtrls(a))) {
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
             x.setVisible(false);
@@ -523,6 +537,7 @@ simpleXrm.hideAllCtrls = function (a) {
 //locks the first control for attribute 'companyname'
 
 simpleXrm.lockCtrl = function (c) {
+    ////debugger;
     simpleXrm.getCtrl(c).setDisabled(true);
 }
 
@@ -531,6 +546,7 @@ simpleXrm.lockCtrl = function (c) {
 //locks the first control for attributes 'companyname', 'firstname', and 'lastname'
 
 simpleXrm.lockCtrls = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.lockCtrl(arguments[i]);
     }
@@ -541,6 +557,7 @@ simpleXrm.lockCtrls = function () {
 //unlocks the first control for attribute 'companyname'
 
 simpleXrm.unlockCtrl = function (c) {
+    ////debugger;
     simpleXrm.getCtrl(c).setDisabled(false);
 }
 
@@ -549,6 +566,7 @@ simpleXrm.unlockCtrl = function (c) {
 //unlocks the first control for attributes 'companyname', 'firstname', and 'lastname'
 
 simpleXrm.unlockCtrls = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.unlockCtrl(arguments[i]);
     }
@@ -559,6 +577,7 @@ simpleXrm.unlockCtrls = function () {
 //locks all controls for attribute 'companyname'
 
 simpleXrm.lockAllCtrls = function (a) {
+    ////debugger;
     if (simpleXrm.valid(simpleXrm.getAllCtrls(a))) {
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
             x.setDisabled(true);
@@ -571,6 +590,7 @@ simpleXrm.lockAllCtrls = function (a) {
 //unlocks all controls for attribute 'companyname'
 
 simpleXrm.unlockAllCtrls = function (a) {
+    ////debugger;
     if (simpleXrm.valid(simpleXrm.getAllCtrls(a))) {
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
             x.setDisabled(false);
@@ -584,6 +604,7 @@ simpleXrm.unlockAllCtrls = function (a) {
 //changes the label for the first control for attribute 'companyname' to "Account Name"
 
 simpleXrm.relabelCtrl = function (c, v) {
+    ////debugger;
     simpleXrm.getCtrl(c).setLabel(v);
 }
 
@@ -592,6 +613,7 @@ simpleXrm.relabelCtrl = function (c, v) {
 //changes the label for all controls for attribute 'companyname' to "Account Name"
 
 simpleXrm.relabelAllCtrls = function (a, v) {
+    ////debugger;
     if (simpleXrm.valid(simpleXrm.getAllCtrls(a))) {
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
             x.setLabel(v);
@@ -604,6 +626,7 @@ simpleXrm.relabelAllCtrls = function (a, v) {
 //returns an array [tab, tab_2, tab_3,...]
 
 simpleXrm.allTabs = function () {
+    //debugger;
     return Xrm.Page.ui.tabs;
 }
 
@@ -612,6 +635,7 @@ simpleXrm.allTabs = function () {
 //returns true if two tabs are present on the form and the second tab's name has not been modified
 
 simpleXrm.validTab = function (t) {
+    //debugger;
     return simpleXrm.valid(simpleXrm.allTabs().get(t.toString()));
 }
 
@@ -620,6 +644,7 @@ simpleXrm.validTab = function (t) {
 //returns the object tab_2
 
 simpleXrm.getTab = function (t) {
+    //debugger;
     return simpleXrm.allTabs().get(t.toString());
 }
 
@@ -628,6 +653,7 @@ simpleXrm.getTab = function (t) {
 //changes the visibility of tab_2 to visible
 
 simpleXrm.showTab = function (t) {
+    ////debugger;
     simpleXrm.getTab(t).setVisible(true);
 }
 
@@ -636,6 +662,7 @@ simpleXrm.showTab = function (t) {
 //changes the visibility of tab_1, tab_2, and tab_4_ to visible
 
 simpleXrm.showTabs = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.showTab(arguments[i]);
     }
@@ -646,6 +673,7 @@ simpleXrm.showTabs = function () {
 //changes the visibility of tab_2 to hidden
 
 simpleXrm.hideTab = function (t) {
+    //debugger;
     simpleXrm.getTab(t).setVisible(false);
 }
 
@@ -654,6 +682,7 @@ simpleXrm.hideTab = function (t) {
 //changes the visibility of tab_1, tab_2, and tab_4_ to hidden
 
 simpleXrm.hideTabs = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.hideTab(arguments[i]);
     }
@@ -665,6 +694,7 @@ simpleXrm.hideTabs = function () {
 //and the tab's first section's name has not been modified
 
 simpleXrm.validSection = function (s) {
+    ////debugger;
     simpleXrm.allTabs().forEach(function (x, i) {
         if (simpleXrm.valid(x.sections.get(s.toString()))) {
             return true;
@@ -677,6 +707,7 @@ simpleXrm.validSection = function (s) {
 //returns the object tab_2_section_1
 
 simpleXrm.getSection = function (s) {
+    //debugger;
     var t;
     simpleXrm.allTabs().forEach(function (x, i) {
         if (simpleXrm.valid(x.sections.get(s.toString()))) {
@@ -691,6 +722,7 @@ simpleXrm.getSection = function (s) {
 //changes the visibility of tab_2_section_1 to visible
 
 simpleXrm.showSection = function (s) {
+    ////debugger;
     simpleXrm.getSection(s).setVisible(true);
 }
 
@@ -699,6 +731,7 @@ simpleXrm.showSection = function (s) {
 //changes the visibility of tab_1_section_3, tab_2_section_1, and tab_4_section_2 to visible
 
 simpleXrm.showSections = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.showSection(arguments[i]);
     }
@@ -709,6 +742,7 @@ simpleXrm.showSections = function () {
 //changes the visibility of tab_2_section_1 to hidden
 
 simpleXrm.hideSection = function (s) {
+    ////debugger;
     simpleXrm.getSection(s).setVisible(false);
 }
 
@@ -717,6 +751,7 @@ simpleXrm.hideSection = function (s) {
 //changes the visibility of tab_1_section_3, tab_2_section_1, and tab_4_section_2 to hidden
 
 simpleXrm.hideSections = function () {
+    ////debugger;
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.hideSection(arguments[i]);
     }
@@ -768,6 +803,7 @@ simpleXrm.openAtts = function () {
 //returns the sum of the current values of price1, price2, and price3
 
 simpleXrm.sumAtts = function () {
+    ////debugger;
     var sum = 0;
     for (i = 0; i < arguments.length; i++) {
         if (!isNaN(simpleXrm.getAttVal(arguments[i]))) {
@@ -778,215 +814,8 @@ simpleXrm.sumAtts = function () {
 }
 
 simpleXrm.calculatePercent = function (p, t) {
+    ////debugger;
     return (p / t) * 100;
-}
-
-
-simpleXrm.oData = {}
-
-simpleXrm.oData.fakeIt = function () {
-    /// <summary>
-    ///Low grade JSON Polyfill as per MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON#Methods 
-    ///Seriously folks, it's 2014, your browser should support native JSON.
-    ///</summary>
-    if (!window.JSON) {
-        console.log("It is not 1991 anymore. Please retire your Apple II or CalecoVision and use a browser that supports JSON.")
-        window.JSON = {
-            parse: function (sJSON) { return eval("(" + sJSON + ")"); },
-            stringify: function (vContent) {
-                if (vContent instanceof Object) {
-                    var sOutput = "";
-                    if (vContent.constructor === Array) {
-                        for (var nId = 0; nId < vContent.length; sOutput += this.stringify(vContent[nId]) + ",", nId++);
-                        return "[" + sOutput.substr(0, sOutput.length - 1) + "]";
-                    }
-                    if (vContent.toString !== Object.prototype.toString) {
-                        return "\"" + vContent.toString().replace(/"/g, "\\$&") + "\"";
-                    }
-                    for (var sProp in vContent) {
-                        sOutput += "\"" + sProp.replace(/"/g, "\\$&") + "\":" + this.stringify(vContent[sProp]) + ",";
-                    }
-                    return "{" + sOutput.substr(0, sOutput.length - 1) + "}";
-                }
-                return typeof vContent === "string" ? "\"" + vContent.replace(/"/g, "\\$&") + "\"" : String(vContent);
-            }
-        };
-    }
-    Xrm.Page.alertDialog("I pity the fool that doesn't update his browser! Tell your administrator you are running the browser from the CalecoVision and you need an upgrade so you can log onto Prodigy.net.");
-}
-simpleXrm.oData.newXHR = function (q, c) {
-    /// <summary>
-    ///simpleXrm.oData.newXHR uses an AJAX pattern to send a CRM OData query "q" and executes callback function "c" when successful.
-    ///</summary>
-    /// <param name="q" type="String">A query string, either statically input or constructed with the simpleXrm.oData.buildQuery() function.</param>
-    /// <param name="c" type="Function">The callback method to invoke on success of the OData query.</param>
-    var oDataUri = Xrm.Page.context.getClientUrl();
-    if (simpleXrm.valid(oDataUri)) {
-        oDataUri += "/XRMServices/2011/OrganizationData.svc/" + q.toString();
-        if (window.XMLHttpRequest) {
-            XHR = new XMLHttpRequest();
-        } else if (window.ActiveXObject) {
-            XHR = new ActiveXObject("Microsoft.XMLHTTP");
-        } else {
-            simpleXrm.error("We encountered an unexpected issue. Please check your form data before proceeding. Info for Admin: User's browser may not support one of the requested scripts. Please attempt using FireFox or IE 8+");
-            return null;
-        }
-        XHR.open("GET", encodeURI(oDataUri), true);
-        XHR.setRequestHeader("Accept", "application/json");
-        XHR.setRequestHeader("Content-Type", "application/json; charset=utf-8");
-        XHR.onreadystatechange = c;
-        XHR.send();
-    }
-}
-
-simpleXrm.oData.mapLookupFields = function (a) {
-    /// <summary>
-    /// simpleXrm.oData.mapLookupFields() gets values from lookup entity a[0] of entity type a[1].
-    /// The values listed as the first element of each argument where i > 0 are mapped into the second element
-    /// of the same argument.
-    /// Sample usage: simpleXrm.oData.mapLookupFields(['OriginatingLead','Lead'],['CompanyName','Name'],['Address1_City','Address1_City'])
-    /// Maps fields CompanyName, Address1_City (from the Originating Lead) into fields Name and Address1_City on the current record.
-    /// </summary>
-    /// <param name="a" type="Array">A 2 element array of form ["new_lookup", "new_customentity"] containing the schema name of the lookup
-    /// attribute on the current record (element 0) and the schema name of the lookup entity type (element 1)</param>
-    /// <param name="arguments[i] where i > 0" type="Array">Each subsequent parameter is an array of form ["new_sourcefield", "new_targetfield"]
-    /// containing the schema names of the source attribute located on the lookup record being mapped (element 0) and the target attribute
-    /// on the current record (element 1).</param>
-    var b = [];
-    var c = [];
-    for (i = 1; i < arguments.length; i++) {
-        if (simpleXrm.valid(arguments[i][0])) {
-            b.push(arguments[i][0]); //source
-            c.push(arguments[i][1].toLowerCase()); //target
-        }
-    }
-    var q = simpleXrm.oData.queryLookup(a[0], a[1], b);
-    simpleXrm.oData.newXHR(q, function () {
-        var a = this;
-        simpleXrm.oData.handleLookupResults(a, b, c);
-    });
-}
-
-simpleXrm.oData.handleLookupResults = function (a, b, c) {
-    var x = simpleXrm.oData.results(a);
-    if (simpleXrm.valid(x)) {
-        for (i = 0; i < b.length; i++) {
-            if (simpleXrm.validAtt(c[i])) {
-                var t = b[i].toString();
-                var u;
-                var j = i + 1;
-                if (simpleXrm.valid(x[t].Id)) {
-                    u = [{
-                        id: simpleXrm.wrapGuid(x[t].Id),
-                        entityType: x[t].LogicalName,
-                        name: x[t].Name
-                    }];
-                } else {
-                    u = x[t].value;
-                }
-                simpleXrm.setAttVal(c[i], u);
-            }
-        }
-    }
-}
-
-simpleXrm.oData.results = function (y) {
-    /// <summary>
-    /// simpleXrm.oData.results() is called by the simpleXrm.oData.newXHR() function. It normalizes results from the data.d.results[0] object into a simple returned variable.
-    /// It also handles absence of the window.JSON object in older browsers by using a low level polyfill (simpleXrm.oData.fakeIt()) to assist in handling results.
-    ///</summary>
-    if (!window.JSON) {
-        simpleXrm.oData.fakeIt();
-    };
-    if (y.readyState == 4 && y.status == 200) {
-        var x = null;
-        var data = JSON.parse(y.responseText, simpleXrm.oData.parseDate);
-        if (simpleXrm.valid(data)) {
-            if (simpleXrm.valid(data.d)) {
-                if (simpleXrm.valid(data.d.results)) {
-                    if (simpleXrm.valid(data.d.results[0])) {
-                        x = data.d.results[0];
-                    }
-                }
-            }
-        }
-        return x;
-    }
-}
-
-simpleXrm.oData.parseDate = function (k, v) {
-    /// <summary>Uses regex to parse the date field response string and return a js date object instead.</summary>
-    var a;
-    if (typeof v === 'string') {
-        a = /Date\(([-+]?\d+)\)/.exec(v);
-        if (a) {
-            return new Date(parseInt(v.replace("/Date(", "").replace(")/", ""), 10));
-        }
-    }
-    return v;
-}
-
-simpleXrm.oData.buildQuery = function (e, s, f, o, x, k, t) {
-    /// <summary>buildQuery() constructs a query directed at the OData endpoint using parameters.</summary>
-    /// <param name="e" type="String">The primary entity set (e.g. "ContactSet") for the OData query.</param>
-    /// <param name="s" type="String">The $select query parameter typically constructed using simpleXrm.oData.select().</param>
-    /// <param name="f" type="String">The $filter query parameter typically constructed using simpleXrm.oData.filter().</param>
-    /// <param name="o" type="String">The $orderby query parameter typically constructed using simpleXrm.oData.orderBy().</param>
-    /// <param name="x" type="String">The $expand query parameter typically constructed using simpleXrm.oData.expand().</param>
-    /// <param name="k" type="String">The $skip query parameter typically constructed using simpleXrm.oData.skip().</param>
-    /// <param name="u" type="String">The $top query parameter typically constructed using simpleXrm.oData.top().</param>
-    var q = "";
-    if (simpleXrm.valid(e)) {
-        q += e.toString() + "?";
-    };
-    if (simpleXrm.valid(s)) {
-        q += s.toString();
-    };
-    if (simpleXrm.valid(f)) {
-        if (simpleXrm.valid(s)) {
-            q += "&"
-        };
-        q += f.toString();
-    };
-    if (simpleXrm.valid(o)) {
-        if (simpleXrm.valid(s) || simpleXrm.valid(f)) {
-            q += "&"
-        };
-        q += o.toString();
-    };
-    if (simpleXrm.valid(x)) {
-        if (simpleXrm.valid(s) || simpleXrm.valid(f) || simpleXrm.valid(o)) {
-            q += "&"
-        };
-        q += x.toString();
-    };
-    if (simpleXrm.valid(k)) {
-        if (simpleXrm.valid(s) || simpleXrm.valid(f) || simpleXrm.valid(o) || simpleXrm.valid(x)) {
-            q += "&"
-        };
-        q += k.toString();
-    };
-    if (simpleXrm.valid(t)) {
-        if (simpleXrm.valid(s) || simpleXrm.valid(f) || simpleXrm.valid(o) || simpleXrm.valid(x) || simpleXrm.valid(k)) {
-            q += "&"
-        };
-        q += t.toString();
-    };
-    return q;
-}
-
-simpleXrm.oData.buildFilter = function (a, o, v) {
-    /// <summary>simpleXrm.oData.buildFilter() takes a set of arguments and constructs a filter conforming to the CRM OData REST API.</summary>
-    /// <param name="a" type="String">The attribute that the query will use to filter results. (case sensitive)</param>
-    /// <param name="o" type="String">The operator that the filter will use to filter. See list from SDK: http://msdn.microsoft.com/en-us/library/gg309461.aspx#BKMK_filter (case sensitive)</param>
-    /// <param name="v" type="String">The value that the operator will use to filter against the attribute. Strings must use "'double quote'" notation. (case sensitive)</param>
-    var filter = "";
-    if (o === "startswith" || o === "substringof" || o === "endswith") {
-        filter += o + "(" + a + "," + v + ")";
-    } else {
-        filter += a + " " + o + " " + v;
-    }
-    return filter;
 }
 
 simpleXrm.link = function (a, o) {
@@ -995,81 +824,6 @@ simpleXrm.link = function (a, o) {
     } else {
         return a.join(o);
     }
-}
-simpleXrm.oData.groupFiltersOr = function () {
-    /// <summary>groupFiltersOr() constructs a joined "OR" aggregate filter comprised of multiple oData filters.</summary>
-    /// <param name="arguments[i]" type="String">An OData filter string (typically constructed using simpleXrm.oDataFilter()). (case sensitive)</param>
-    return "(" + arguments.join(" or ") + ")";
-}
-
-simpleXrm.oData.groupFiltersAnd = function () {
-    /// <summary>groupFiltersOr() constructs a joined "AND" aggregate filter comprised of multiple oData filters.</summary>
-    /// <param name="arguments[i]" type="String">An OData filter string (typically constructed using simpleXrm.oDataFilter()). (case sensitive)</param>
-    return "(" + arguments.join(" and ");
-}
-
-simpleXrm.oData.filter = function () {
-    /// <summary>oDataFilter() builds and returns a $filter parameter from individual filter components and group constructors for an OData query. Multiple filters passed as arguments will be grouped "AND" by default.</summary>
-    /// <param name="arguments[i]" type="String">A single or aggregate filter to be added to the filtering criteria. (case sensitive)</param>
-    return "$filter=" + simpleXrm.link(arguments, " and ");
-}
-
-simpleXrm.oData.select = function () {
-    /// <summary>simpleXrm.oData.select() builds and returns a $select parameter for attribute data from the primary entity for an OData query.</summary>
-    /// <param name="arguments[i]" type="String">An attribute on the primary entity to be returned by the OData query. (case sensitive)</param>
-    return "$select=" + simpleXrm.link(arguments, ",");
-}
-
-simpleXrm.oData.selectFromExpanded = function (x) {
-    /// <summary>simpleXrm.oData.selectFromExpanded() builds and returns an input argument for simpleXrm.oDataSelect() that handles fields from related (expanded) records.</summary>
-    /// <param name="x" type="String">The name of the relationship between the primary entity and the related (expanded) entity. (case sensitive)</param>
-    /// <param name="arguments[i] (where i > 0)" type="String">The name of the attribute(s) on the related (expanded) entity to be returned. Add an additional argument for each parameter from this relationship. (case sensitive)</param>
-    var y = [];
-    for (i = 1; i < arguments.length; i++) {
-        y.push(x.toString() + "/" + arguments[i].toString());
-    }
-    return simpleXrm.link(y, ",");
-}
-
-simpleXrm.oData.expand = function () {
-    /// <summary>simpleXrm.oData.expand() builds and returns an $expand parameter for a related entity in an OData query.</summary>
-    /// <param name="arguments[0]" type="String">The relationship name that connects the expanded entity to the primary entity. (case sensitive)</param>
-    /// <param name="arguments[i] (where i > 0)" type="String">An attribute on the expanded entity to be returned by the OData query</param>
-    return "$expand=" + simpleXrm.link(arguments, ",");
-}
-
-simpleXrm.oData.orderBy = function () {
-    /// <summary>simpleXrm.oData.orderBy() builds and returns an $orderby parameter for an OData query.</summary>
-    /// <param name="arguments[0]" type="String">The name of an attribute that results should be ordered by. Optionally follow by " desc" to list in descending order.</param>
-    return "$orderby=" + simpleXrm.link(arguments, ",");
-}
-
-simpleXrm.oData.skip = function (n) {
-    /// <summary>simpleXrm.oData.skip() builds and returns a $skip parameter for an OData query.</summary>
-    /// <param name="n" type="int32">The number of records to skip.</param>
-    var y = "$skip=" + n.toString();
-    return y;
-}
-
-simpleXrm.oData.top = function (n) {
-    /// <summary>simpleXrm.oData.top() builds and returns a $top parameter for an OData query.</summary>
-    /// <param name="n" type="int32">The number of records to select from the top of the query.</param>
-    var y = "$top=" + n.toString();
-    return y;
-}
-
-simpleXrm.oData.queryLookup = function (a, b, c) {
-    /// <summary>simpleXrm.queryLookup() returns the values of attributes arguments[1,2,...] from the selected record of lookup 'a'.</summary>
-    /// <param name="a" type="String">The name of the lookup attribute on the primary record.</param>
-    /// <param name="b" type="String">The schema name of the entity referenced in "a". (Case sensitive)</param>
-    /// <param name="c" type="Array">An array containing the attribute schema name(s) of the target attribute(s) on the related lookup record. (Case sensitive)</param>
-    var x = "guid'" + simpleXrm.cleanGuid(simpleXrm.getLookupID(a.toString())) + "'";
-    var e = b + "Set";
-    var b = simpleXrm.oData.buildFilter(b + "Id", 'eq', x);
-    var f = simpleXrm.oData.filter(b);
-    var s = simpleXrm.oData.select(simpleXrm.link(c, ","));
-    var q = simpleXrm.oData.buildQuery(e, s, f);
-    return q;
 }
 
 simpleXrm.newGuid = function () {
@@ -1094,57 +848,4 @@ simpleXrm.cleanGuid = function (g) {
 simpleXrm.wrapGuid = function (g) {
     /// <summary>Returns a guid with braces.</summary>
     return "{" + simpleXrm.cleanGuid(g) + "}";
-}
-
-simpleXrm.layout = {}
-
-simpleXrm.layout.cellXML = function (n, w) {
-    /// <summary>simpleXrm.buildCellXml() returns a cell XML element for attribute 'n' and width 'w'.</summary>
-    /// <param name="n" type="String">The name of the attribute to be shown in the column.</param>
-    return "<cell name='" + n.toString() + "' width='" + w.toString() + "' />";
-}
-
-simpleXrm.layout.rowXML = function (a, c, n) {
-    /// <summary>simpleXrm.rowXML() returns a row XML element including all child cell elements passed as an array 'c'.</summary>
-    /// <param name="a" type="String">The attribute that represents the unique id in the row.</param>
-    /// <param name="c" type="Array">An array of strings representing each cell/column in the row. Use simpleXrm.cellXML() to build the elements of the array.</param>
-    /// <param name="n" type="String">The name of the Row. Either the entity singular name</param>
-    if (!simpleXrm.valid(n.toString())) {
-        n = "result";
-    };
-    var r = "<row id='" + a.toString() + "' name='" + n.toString() + "'>";
-    for (i = 0; i < c.length; i++) {
-        r += c[i];
-    };
-    r += "</row>";
-    return r;
-}
-
-simpleXrm.layout.gridXML = function (o, a, r, n, p, c) {
-    /// <summary>Description</summary>
-    /// <param name="o" type="String">The 'object' input for the grid. Accepts an entity type code for the grid.</param>
-    /// <param name="a" type="String">The 'jump' input for the grid. Accepts the name of the attribute that will be used to filter rows using the alphabetical index at the bottom of the grid.</param>
-    /// <param name="r" type="Array">An array of strings representing each row in the grid. Typically length === 1.</param>
-    /// <param name="n" type="String">The 'name' input for the grid. Accepts the plural entity name, or "resultset" (defaults to "resultset").</param>
-    /// <param name="p" type="Boolean">The 'preview' input for the grid. Defaults to true.</param>
-    /// <param name="c" type="Boolean">The 'icon' input for the grid. Determines whether to display icons in the grid view. Defaults to false.</param>
-    if (c != true) {
-        c = 0;
-    } else {
-        c = 1;
-    };
-    if (p != false) {
-        p = 1;
-    } else {
-        p = 0;
-    }
-    if (!simpleXrm.valid(n.toString())) {
-        n = "resultset";
-    };
-    var g = "<grid icon='" + c.toString() + "' jump='" + a.toString() + "' name='" + n.toString() + "' object='" + o + "' preview='" + p + "' select='true' >";
-    for (i = 0; i < r.length; i++) {
-        g += r[i];
-    };
-    g += "</ grid>";
-    return g;
 }
