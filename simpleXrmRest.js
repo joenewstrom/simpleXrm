@@ -31,7 +31,7 @@ simpleXrmRest.fakeIt = function () {
             }
         };
     }
-    Xrm.Page.alertDialog("I pity the fool that doesn't update his browser! Tell your administrator to upgrade your CalecoVision so you can log onto Prodigy.net.");
+    Xrm.Page.alertDialog("It is not 1991 anymore. Please retire your Apple II or CalecoVision and use a browser that supports JSON.");
 }
 
 simpleXrmRest.parseDate = function (k, v) {

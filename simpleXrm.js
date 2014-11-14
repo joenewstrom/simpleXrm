@@ -21,7 +21,7 @@ simpleXrm.getAttDate = function (a) {
     if (simpleXrm.valid(a)) {
         if (simpleXrm.hasVal(a)) {
             var x = simpleXrm.getAttVal(a);
-            d = {
+            var d = {
                 year: x.getFullYear(),
                 month: x.getMonth(),
                 date: x.getDate(),
@@ -33,6 +33,20 @@ simpleXrm.getAttDate = function (a) {
     }
 }
 
+
+
+simpleXrm.offsetTime = function (x, y) {
+    /// <summary>simpleXrm.offsetTime() returns the time calculated by adding y hours to date/time field x.</summary>
+    var z = simpleXrm.getAttVal(x);
+    var year = z.getFullYear();
+    var month = z.getMonth();
+    var date = z.getDate();
+    var hours = z.getHours();
+    var minutes = z.getMinutes();
+    //calculate the desired value for targetTime shifting the hours value by hoursOffset.
+    var t = new Date(year, month, date, hours + y, minutes);
+    return t;
+}
 
 simpleXrm.valid = function (a) {
     ///<summary>
@@ -256,77 +270,88 @@ simpleXrm.sendAttNever = function (a) {
     simpleXrm.getAtt(a).setSubmitMode("never");
 }
 
-//sendAttsNever() excludes the current values of all attributes 'a1', 'a2', etc. passed as arguments
-//to the function in the XML form data submitted to the server
-//sample usage: simpleXrm.sendAttsNever(companyname,firstname,lastname,fullname) 
-//will not send the values of attributes 'companyname', 'firstname', 'lastname', and
-//'fullname' to the server regardless of whether the field values were modified ('dirty')
 
 simpleXrm.sendAttsNever = function () {
-    ////debugger;
+    ///<summary>
+    ///sendAttsNever() excludes the current values of all attributes 'a1', 'a2', etc. passed as arguments
+    ///to the function in the XML form data submitted to the server
+    ///sample usage: simpleXrm.sendAttsNever(companyname,firstname,lastname,fullname) 
+    ///will not send the values of attributes 'companyname', 'firstname', 'lastname', and
+    ///'fullname' to the server regardless of whether the field values were modified ('dirty')
+    ///</summary>
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.sendAttNever(arguments[i]);
     }
 }
 
-//sendAttChanges() will only include the value of 'a' in the XML form data submitted to the server if 'a' was updated/modified
-//sample usage: simpleXrm.sendAttChanges('companyname') will send the value of companyname to the server
-//only if/when the field value was modified ('dirty')
 
 simpleXrm.sendAttChanges = function (a) {
-    ////debugger;
+    ///<summary>
+    ///sendAttChanges() will only include the value of 'a' in the XML form data submitted to the server if 'a' was updated/modified
+    ///sample usage: simpleXrm.sendAttChanges('companyname') will send the value of companyname to the server
+    ///only if/when the field value was modified ('dirty')
+    ///</summary>
     simpleXrm.getAtt(a).setSubmitMode("dirty");
 }
 
-//sendAttsChanges() will only include the current values of all attributes 'a1', 'a2', etc. passed as arguments
-//to the function in the XML form data submitted to the server if each individual attribute was updated/modified
-//sample usage: simpleXrm.sendAttsChanges(companyname,firstname,lastname,fullname) 
-//will only send the values of attributes 'companyname', 'firstname', 'lastname', and
-//'fullname' to the server if the field values were updated or modified ('dirty')
 
 simpleXrm.sendAttsChanges = function () {
-    ////debugger;
+    ///<summary>
+    ///sendAttsChanges() will only include the current values of all attributes 'a1', 'a2', etc. passed as arguments
+    ///to the function in the XML form data submitted to the server if each individual attribute was updated/modified
+    ///sample usage: simpleXrm.sendAttsChanges(companyname,firstname,lastname,fullname) 
+    ///will only send the values of attributes 'companyname', 'firstname', 'lastname', and
+    ///'fullname' to the server if the field values were updated or modified ('dirty')
+    ///</summary>
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.sendAttChanges(arguments[i]);
     }
 }
 
-//getAttReqd() returns the required status of attribute 'a'
-//sample usage: simpleXrm.getAttReqd('companyname') 
-//returns 'required', 'recommended', or 'none' depending on the requirement level of the attribute
+
 
 simpleXrm.getAttReqd = function (a) {
-    ////debugger;
+    ///<summary>
+    ///getAttReqd() returns the required status of attribute 'a'
+    ///sample usage: simpleXrm.getAttReqd('companyname') 
+    ///returns 'required', 'recommended', or 'none' depending on the requirement level of the attribute
+    ///</summary>    
     return simpleXrm.getAtt(a).getRequiredLevel();
 }
 
-//setAttReqd() sets the required status of attribute 'a' to 'required'
-//sample usage: simpleXrm.setAttReqd('companyname') 
-//attribute 'companyname' is now business required
+
 
 simpleXrm.setAttReqd = function (a) {
-    ////debugger;
+    ///<summary>
+    ///setAttReqd() sets the required status of attribute 'a' to 'required'
+    ///sample usage: simpleXrm.setAttReqd('companyname') 
+    ///attribute 'companyname' is now business required
+    ///</summary>
     simpleXrm.getAtt(a).setRequiredLevel("required");
 }
 
-//setAttsReqd() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
-//to the function to 'required'
-//sample usage: simpleXrm.setAttsReqd(companyname,firstname,lastname,fullname) 
-//attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business required
+
 
 simpleXrm.setAttsReqd = function () {
-    ////debugger;
+    ///<summary>
+    ///setAttsReqd() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
+    ///to the function to 'required'
+    ///sample usage: simpleXrm.setAttsReqd(companyname,firstname,lastname,fullname) 
+    ///attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business required
+    ///</summary>
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.setAttReqd(arguments[i]);
     }
 }
 
-//clearAttReqd() sets the required status of attribute 'a' to 'none'
-//sample usage: simpleXrm.clearAttReqd('companyname') 
-//attribute 'companyname' is not business required
+
 
 simpleXrm.clearAttReqd = function (a) {
-    ////debugger;
+    ///<summary>
+    ///clearAttReqd() sets the required status of attribute 'a' to 'none'
+    ///sample usage: simpleXrm.clearAttReqd('companyname') 
+    ///attribute 'companyname' is not business required
+    ///</summary>
     simpleXrm.getAtt(a).setRequiredLevel("none");
 }
 
@@ -352,24 +377,28 @@ simpleXrm.setAttRecommended = function (a) {
     simpleXrm.getAtt(a).setRequiredLevel("recommended");
 }
 
-//setAttsRecommended() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
-//to the function to 'recommended'
-//sample usage: simpleXrm.setAttsRecommended(companyname,firstname,lastname,fullname) 
-//attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business recommended
+
 
 simpleXrm.setAttsRecommended = function () {
-    ////debugger;
+    ///<summary>
+    ///setAttsRecommended() sets the required status of all attributes 'a1', 'a2', etc. passed as arguments
+    ///to the function to 'recommended'
+    ///sample usage: simpleXrm.setAttsRecommended(companyname,firstname,lastname,fullname) 
+    ///attributes 'companyname', 'firstname', 'lastname', and 'fullname' are now business recommended
+    ///</summary>
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.setAttRecommended(arguments[i]);
     }
 }
 
-//fireOnChange() mirrors the SDK implementation of Xrm.Page.getAttribute().fireOnChange()
-//sample usage: simpleXrm.fireOnChange('companyname')
-//triggers scripts registered on the change event of 'companyname' if it is included in the attributes collection
+
 
 simpleXrm.fireOnChange = function (a) {
-    ////debugger;
+    ///<summary>
+    ///fireOnChange() mirrors the SDK implementation of Xrm.Page.getAttribute().fireOnChange()
+    ///sample usage: simpleXrm.fireOnChange('companyname')
+    ///triggers scripts registered on the change event of 'companyname' if it is included in the attributes collection
+    ///</summary>
     if (simpleXrm.validAtt(a)) {
         simpleXrm.getAtt(a).fireOnChange();
     } else {
@@ -390,13 +419,14 @@ simpleXrm.fireChanges = function () {
 }
 
 
-//validCtrl() checks the form for control 'c'
-//sample usage: simpleXrm.validCtrl('companyname') 
-//returns true if 'companyname' is present on the form
-//(note second control for attribute 'companyname' is 'companyname1', third is 'companyname2', etc.)
 
 simpleXrm.validCtrl = function (c) {
-    ////debugger;
+    ///<summary>
+    ///validCtrl() checks the form for control 'c'
+    ///sample usage: simpleXrm.validCtrl('companyname') 
+    ///returns true if 'companyname' is present on the form
+    ///(note second control for attribute 'companyname' is 'companyname1', third is 'companyname2', etc.)
+    ///</summary>
     if (simpleXrm.valid(c)) {
         return (simpleXrm.valid(Xrm.Page.getControl(c.toString())));
     } else {
@@ -404,14 +434,15 @@ simpleXrm.validCtrl = function (c) {
     }
 }
 
-//getCtrl() gets the object for control 'c'
-//sample usage: simpleXrm.getCtrl('companyname') 
-//returns a control object if 'companyname' is present on the form
-//(note second control for attribute 'companyname' is 'companyname1', third is 'companyname2', etc.)
+
 
 simpleXrm.getCtrl = function (c) {
-
-    ////debugger;
+    ///<summary>
+    ///getCtrl() gets the object for control 'c'
+    ///sample usage: simpleXrm.getCtrl('companyname') 
+    ///returns a control object if 'companyname' is present on the form
+    ///(note second control for attribute 'companyname' is 'companyname1', third is 'companyname2', etc.)
+    ///</summary>
     if (simpleXrm.validCtrl(c)) {
         return Xrm.Page.getControl(c.toString());
     } else {
@@ -483,6 +514,8 @@ simpleXrm.hideCtrls = function () {
 }
 
 simpleXrm.clearOptions = function (a) {
+    /// <summary>simpleXrm.clearOptions() clears all options from all controls for attribute "a".</summary>
+    /// <param name="a" type="String">The name of the optionset attribute to clear.</param>
     simpleXrm.getAllCtrls(a).forEach(function (x, i) {
         x.clearOptions();
     });
@@ -490,16 +523,21 @@ simpleXrm.clearOptions = function (a) {
 }
 
 simpleXrm.restoreOptions = function (a) {
+    /// <summary>simpleXrm.restoreOptions() restores all options from all controls for attribute "a".</summary>
+    /// <param name="a" type="String">The name of the optionset attribute to restore.</param>
     simpleXrm.clearOptions(a);
-    var x = simpleXrm.getAtt(a).getOptions();
-    simpleXrm.getAllCtrls(a).forEach(function (y, i) {
+    var x = simpleXrm.getAtt(a).getOptions(); 
+    simpleXrm.getAllCtrls(a).forEach(function (c, i) {
         x.forEach(function (z, j) {
-            z.addOption(y);
+            c.addOption(z);
         });
     });
 }
 
 simpleXrm.removeOption = function (a, o) {
+    /// <summary>simpleXrm.removeOption removes an option with value "o" from all controls for attribute "a". </summary>
+    /// <param name="a" type="String">The name of the optionset attribute to restore.</param>
+    /// <param name="o" type="Integer">The value of the option to remove from attribute "a".</param>
     simpleXrm.getAllCtrls(a).forEach(function (x, i) {
         x.removeOption(o);
     });
@@ -790,8 +828,8 @@ simpleXrm.openAtt = function (a) {
 
 simpleXrm.openAtts = function () {
     /// <summary>
-    ///simpleXrm.openAtts() unlocks and shows all controls for all attributes passed as arguments.
-    ///</summary>
+    ///     simpleXrm.openAtts() unlocks and shows all controls for all attributes passed as arguments.
+    /// </summary>
     for (i = 0; i < arguments.length; i++) {
         simpleXrm.openAtt(arguments[i]);
     }
@@ -848,4 +886,212 @@ simpleXrm.cleanGuid = function (g) {
 simpleXrm.wrapGuid = function (g) {
     /// <summary>Returns a guid with braces.</summary>
     return "{" + simpleXrm.cleanGuid(g) + "}";
+}
+
+simpleXrm.timeStamp = function (x, y) {
+    /// <summary>simpleXrm.timeStamp() sets the value of field "x" to the current date/time. Checks optional boolean value y to identify whether to overwrite existing values.</summary>
+    /// <param name="x" type="String">The field to time stamp. If the value is null, it will always be time stamped regardless of the value of y.</param>
+    /// <param name="y" type="Boolean">(Optional) Determines whether to overwrite existing values with the current time.</param>
+    t = Xrm.Page.getAttribute(x).getValue();
+    if (t === null || y === true || y === undefined) {
+        var z = new Date();
+        Xrm.Page.getAttribute(x).setValue(z);
+        Xrm.Page.getAttribute(x).setSubmitMode("always");
+    }f
+}
+
+simpleXrm.parseRESTLookup = function (a) {
+    /// <summary>
+    /// simpleXrm.parseRESTLookup() takes response to OData REST endpoint query as an argument "a" and returns an object "r" which can be directly piped into a CRM lookup using the
+    /// JavaScript API.
+    ///</summary>
+    /// <param name="a" type="Object">
+    /// An Object returned by a query to the Dynamics CRM OData REST Endpoint. Has the following attributes:
+    ///     LogicalName: The entity logical name.
+    ///     Id: The GUID of the record.
+    ///     Name: The primary attribute (name) of the record.
+    /// </param>
+    var r = [];
+    if (simpleXrm.valid(a)) {
+        r[0] = {
+            entityType: a.LogicalName,
+            id: simpleXrm.wrapGuid(a.Id),
+            name: a.Name
+        };
+    }
+    return r;
+}
+
+simpleXrm.setLookupVal = function (a, b, c) {
+    ///<summary>
+    ///simpleXrm.setLookupVal() uses an object array passed as "b" to set the lookup value when attribute "a" either does not have a value or when overwrite boolean "c" is true.
+    ///</summary>
+    /// <param name="a" type="String">The name of the lookup attribute to set.</param>
+    /// <param name="b" type="Array">An Array containing one or more objects (activity party lookups can have b.length > 1) of the form [{}].</param>
+    /// <param name="c" type="Boolean">A boolean that identifies whether or not to override existing values.</param>
+    if (simpleXrm.valid(b) && (c != true || !simpleXrm.hasVal(a))) {
+        simpleXrm.setAttVal(a, b);
+    } else if (c != true && simpleXrm.hasVal(a)) {
+    } else {
+        simpleXrm.clearAttVal(a);
+    };
+}
+
+simpleXrm.setBooleanDefault = function (a) {
+    ///<summary>
+    ///simpleXrm.setBooleanDefault() sets the value of boolean field "a" to false if it is not true. This eliminates the annoyance of having to click twice to check a box in the BPF in CRM 2013.
+    ///</summary>
+    if (simpleXrm.getAttVal(a) !== true) {
+        simpleXrm.setAttVal(a, false);
+    }
+}
+
+simpleXrm.setBooleanDefaults = function () {
+    /// <summary>
+    /// simpleXrm.setBooleanDefaults() sets the value to false if it is not true for all attributes passed as arguments.
+    /// </summary>
+    for (i = 0; i < arguments.length; i++) {
+        simpleXrm.setBooleanDefault(arguments[i]);
+    }
+}
+
+simpleXrm.applyFilter = function (a, f) {
+    /// <summary>simpleXrm.applyFilter() applies a filter "f" to lookup attribute "a".</summary>
+    var b = simpleXrm.getCtrl(a);
+    var c = function (f) {
+        b.addCustomFilter(f);
+    };
+    b.addPreSearch(c);
+}
+
+simpleXrm.closeSection = function (s) {
+    /// <summary>simpleXrm.closeSection() hides the specified section 's' and clears the value of all attributes with controls within the section.</summary>
+    simpleXrm.hideSection(s);
+    simpleXrm.getSection(s).controls.forEach(function(c, i) {
+        simpleXrm.clearAttVal(c.getAttribute());
+    });
+}
+
+simpleXrm.closeSections = function () {
+    /// <summary>simpleXrm.closeSections() hides all sections passed as arguments and clears the value of all attributes with controls within the sections.</summary>
+    for (i = 0; i < arguments.length; i++) {
+        simpleXrm.closeSection(arguments[i]);
+    };
+}
+
+simpleXrm.closeTab = function (t) {
+    /// <summary>simpleXrm.closeTab() hides the specified tab 't' and clears the value of all attributes with controls within the tab.</summary>
+    simpleXrm.hideTab(t);
+    simpleXrm.getTab(t).sections.forEach(function (s, i) {
+        simpleXrm.closeSection(s);
+    });
+}
+
+simpleXrm.closeTabs = function () {
+    /// <summary>simpleXrm.closeTabs() hides all tabs passed as arguments and clears the value of all attributes with controls within the tabs.</summary>
+    for (i = 0; i < arguments.length; i++) {
+        simpleXrm.closeTab(arguments[i]);
+    };
+}
+
+simpleXrm.formatPhoneNumber = function (c) {
+    var p = c.getEventSource();
+    // Verify that the field is valid
+    if (simpleXrm.valid(p)) {
+        if (p.getValue() != null) {
+            // Remove any special characters
+            var q = p.getValue().replace(/[^0-9,A-Z,a-z]/g, "");
+
+            // Translate any letters to the equivalent phone number, if method is included
+            try {
+                if (q.length <= 10) {
+                    q = simpleXrm.mapPhoneAlpha(q);
+                }
+                else {
+                    q = simpleXrm.mapPhoneAlpha(q.substr(0, 10)) + q.substr(10, q.length);
+                }
+            }
+            catch (e) {
+            };
+            switch (q.length) {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 8:
+                case 9:
+                    break;
+                case 7:
+                    p.setValue(q.substr(0, 3) + "-" + q.substr(3, 4));
+                    break;
+                case 10:
+                    p.setValue("(" + q.substr(0, 3) + ") " + q.substr(3, 3) + "-" + q.substr(6, 4));
+                    break;
+                default:
+                    p.setValue("(" + q.substr(0, 3) + ") " + q.substr(3, 3) + "-" + q.substr(6, 4) + " " + q.substr(10, q.length));
+                    break;
+            }
+        }
+    }
+}
+
+simpleXrm.mapPhoneAlpha = function (s) {
+    /// <summary>simpleXrm.mapPhoneAlpha() translates each character in a phone number field to its numerical equivalent.</summary>
+    var n = "";
+    //loop through each char, and pass it to the translation method
+    for (var i = 0; i < s.length; i++) {
+        var t = s.charAt(i).toUpperCase();
+        var r = t;
+        switch (t) {
+            case "A":
+            case "B":
+            case "C":
+                r = 2;
+                break;
+            case "D":
+            case "E":
+            case "F":
+                r = 3;
+                break;
+            case "G":
+            case "H":
+            case "I":
+                r = 4;
+                break;
+            case "J":
+            case "K":
+            case "L":
+                r = 5;
+                break;
+            case "M":
+            case "N":
+            case "O":
+                r = 6;
+                break;
+            case "P":
+            case "Q":
+            case "R":
+            case "S":
+                r = 7;
+                break;
+            case "T":
+            case "U":
+            case "V":
+                r = 8;
+                break;
+            case "W":
+            case "X":
+            case "Y":
+            case "Z":
+                r = 9;
+                break;
+            default:
+                r = t;
+                break;
+        };
+        n += r;
+    }
+    return n;
 }
