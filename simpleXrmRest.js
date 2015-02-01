@@ -1,5 +1,11 @@
-// JavaScript source code
-/// <reference path="C:\DynamicsCRM\Scripts\simpleXrm.js" />
+/// <summary>
+/// VERSION 1.5.0 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
+/// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
+/// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
+/// 
+/// simpleXrmRest: a REST-based library for interfacing asynchronously with the OData REST endpoint in a modular fashion using JavaScript Objects to represent queries
+/// </summary>
 
 var simpleXrmRest = {
     fakeIt: function () {
@@ -68,6 +74,37 @@ var simpleXrmRest = {
             XHR.setRequestHeader("Content-Type", "application/json; charset=utf-8");
             XHR.onreadystatechange = a.callback;
             XHR.send();
+        }
+    },
+    query: function (a) {
+        simpleXrmRest.XHR({
+            query: simpleXrmRest.buildQuery({
+                entitySet: a.entitySet,
+                select: simpleXrmRest.select(a.select),
+                filter: simpleXrmRest.filter(a.filter),
+                orderBy: simpleXrmRest.orderBy(a.orderBy),
+                expand: simpleXrmRest.expand(a.expand),
+                skip: simpleXrmRest.skip(a.skip),
+                top: simpleXrmRest.top(a.top)
+            }),
+            callback: a.callback
+        })
+    },
+    mapResults: function (o) {
+        var map = o.map;
+        var results = o.results;
+        for (x in map) {
+            if (!!results[x]) {
+                if (typeof results[x] === "object") {
+                    if (!!results[x].Value) {
+                        simpleXrm.setAttVal(map[x], results[x].Value);
+                    } else if (!!results[x].Id && !!results[x].Name) {
+                        simpleXrm.setAttVal(map[x], simpleXrm.parseRESTLookup(results[x]));
+                    } else (simpleXrm.clearAttVal(map[x]));
+                } else {
+                    simpleXrm.setAttVal(map[x], results[x]);
+                }
+            }
         }
     },
     buildQuery: function (a) {
@@ -154,7 +191,15 @@ var simpleXrmRest = {
     filter: function () {
         /// <summary>simpleXrmRest.oDataFilter() builds and returns a $filter parameter from individual filter components and group constructors for an OData query. Multiple filters passed as arguments will be grouped "AND" by default.</summary>
         /// <param name="arguments[i]" type="String">A single or aggregate filter to be added to the filtering criteria. (case sensitive)</param>
-        return "$filter=" + simpleXrm.link(arguments, " and ");
+        var f = [];
+        for (var i = 0; i < arguments.length; i++) {
+            if (typeof arguments[i] === "object") {
+                f.push(simpleXrmRest.buildFilter(arguments[i]));
+            } else if (typeof arguments[i] === "string") {
+                f.push(arguments[i]);
+            }
+        }
+        return "$filter=" + simpleXrm.link(f, " and ");
     },
     select: function () {
         /// <summary>simpleXrmRest.select() builds and returns a $select parameter for attribute data from the primary entity for an OData query.</summary>
@@ -206,10 +251,10 @@ var simpleXrmRest = {
         /// <param name="a.attributes" type="Array">An array containing the attribute schema name(s) of the target attribute(s) on the related lookup record. (Case sensitive)</param>
         var x = "guid'" + simpleXrm.cleanGuid(simpleXrm.getLookupID(a.lookup.toString())) + "'";
         var e = a.entityType + "Set";
-        var b = simpleXrmRest.buildFilter({attribute: a.entityType + "Id", operator:'eq', value: x});
+        var b = simpleXrmRest.buildFilter({ attribute: a.entityType + "Id", operator: 'eq', value: x });
         var f = simpleXrmRest.filter(b);
         var s = simpleXrmRest.select(simpleXrm.link(a.attributes, ","));
-        var q = simpleXrmRest.buildQuery({entitySet:e, filter:f, select:s});
+        var q = simpleXrmRest.buildQuery({ entitySet: e, filter: f, select: s });
         return q;
     },
     parseOnReady: function (x) {
@@ -259,8 +304,15 @@ var simpleXrmRest = {
         /// unitPriceField: "new_unitprice", listPriceField: "new_listprice", unitField: "new_units"})
         /// Maps list price of the Product into field 'new_listprice', units from the Price List item into field 'new_units', and the calculated price in field 'new_unitprice'.
         /// </summary>
-      
-        /// {unitPriceField, listPriceField, unitField}
+        /// <param name="a" type="object">
+        /// productLookupField: a string containing the name of the attribute that represents the product lookup,
+        /// priceListLookupField: a string containing the name of the attribute that represents the price list lookup,
+        /// unitPriceField: a string containing the name of the attribute that represents the price per unit,
+        /// listPriceField: a string containing the name of the attribute that represents the list price,
+        /// unitField: a string containing the name of the attribute that represents the unit lookup,
+        /// callback: a callback function to be invoked on successful completion of the operation
+        /// </param>
+
         var c = {
             product: null || simpleXrm.getLookupID(a.productLookupField),
             pricelist: null || simpleXrm.getLookupID(a.priceListLookupField),
@@ -278,7 +330,7 @@ var simpleXrmRest = {
                 }),
                 callback: function () { //x is data, y is textStatus, z is XMLHttpRequest???
                     var q = simpleXrmRest.normalizeResults(this);
-                    if (simpleXrm.valid(q)){
+                    if (simpleXrm.valid(q)) {
                         c.currentCost = q.CurrentCost.Value;
                         if (typeof c.currentCost === "string") {
                             c.currentCost = parseFloat(c.currentCost);
@@ -302,7 +354,7 @@ var simpleXrmRest = {
                             }),
                             callback: function () {
                                 var r = simpleXrmRest.normalizeResults(this);
-                                if (simpleXrm.valid(r)) {
+                                if (r) {
                                     c.amount = r.Amount.Value;
                                     if (typeof c.amount === "string") {
                                         c.amount = parseFloat(c.amount);
@@ -319,13 +371,12 @@ var simpleXrmRest = {
                                     c.roundingPolicyCode = r.RoundingPolicyCode.Value;
                                     c.roundingOptionAmount = r.RoundingOptionAmount;
                                     if (typeof c.roundingOptionAmount === "string") {
-                                        c.roundingOptionAmount = parseFloat(c.roundingOptionAmount);d
+                                        c.roundingOptionAmount = parseFloat(c.roundingOptionAmount);
                                     }; var p = null;
                                     var round = true;
                                     if (c.roundingPolicyCode == 1) {
                                         round = false;
                                     };
-                                    //#region Price Method
                                     switch (c.pricingMethodCode) {
                                         case 1:
                                             p = c.amount;
@@ -349,8 +400,6 @@ var simpleXrmRest = {
                                         default:
                                             p = c.listPrice;
                                     };
-                                    //#endregion
-                                    //#region Rounding Policy
                                     if (round != true && simpleXrm.valid(p)) {
                                         simpleXrm.setAttVal(a.unitPriceField, p);
                                     } else if (round === true && simpleXrm.valid(p)) {
@@ -400,16 +449,15 @@ var simpleXrmRest = {
                                             p = p1;
                                         };
                                     };
-                                    //#endregion
                                     simpleXrm.setAttVal(c.unitPriceField, p);
                                     simpleXrm.sendAttAlways(c.unitPriceField);
                                     try {
                                         c.callback();
                                     } catch (e) {
-                                        simpleXrm.timedFormError("The callback function could not be invoked.", 3000, "callbackerror02")
+                                        simpleXrm.timedFormError("The callback function could not be invoked.", 3000)
                                     }
                                 } else {
-                                    simpleXrm.timedFormError("The Price List Item could not be loaded.", 3000, "callbackerror01")
+                                    simpleXrm.timedFormError("The Price List Item could not be loaded.", 3000)
                                 }
                             }
                         });

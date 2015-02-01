@@ -1,7 +1,10 @@
 /// <summary>
+/// VERSION 1.5.0 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
+/// 
+/// simpleXrm: the base library for form scripts
 /// </summary>
 
 var simpleXrm = {
@@ -12,8 +15,8 @@ var simpleXrm = {
         /// <param name="e" type="String">
         /// The element (attribute, control, argument) that throws the error.
         /// </param>
-        if (!!m) {
-            simpleXrm.timedFormError("m", 3000);
+        if (m) {
+            simpleXrm.timedFormError(m, 3000);
         }
         console.log("Error originating in a script using the simpleXrm.js library. Contact your CRM Administrator with the following details: Element " + e.toString() + " was not found or is invalid.");
         //throw new Error("Error: Oops! Something went wrong with a script. Contact your CRM Administrator with the following details: Element " + e.toString() + " was not found or is invalid.");
@@ -62,9 +65,9 @@ var simpleXrm = {
     },
     valid: function (a) {
         /// <summary>
-        /// simpleXrm.valid() returns true if the argument 'a' is a valid argument. This method can often be shortcutted by using the double-negative operator '!!' as in simpleXrm.valid(a) is usually
+        /// simpleXrm.valid() returns true if the argument 'a' is a valid argument. This method can often be shortcutted by using native JavaScript coersion, 
+        /// or the double-negative operator '!!' which explicitly evaluates !!x to either true or false. simpleXrm.valid(a) is usually
         /// equivalent to !!a with the notable exception of numerical fields which will return false when equal to zero
-        ///<summary>
         ///
         ///</summary>
         ///<parameter name="a" type="Argument">the argument that is checked for validity in the DOM/Xrm collection(s)</parameter>
@@ -87,7 +90,7 @@ var simpleXrm = {
         /// <param name="a" type="Attribute">
         /// The attribute to be checked for data. 
         /// </param>
-        return !!Xrm.Page.getAttribute(a).getValue() || false;
+        return simpleXrm.valid(Xrm.Page.getAttribute(a).getValue()) || false;
     },
     validAtt: function (a) {
         /// <summary>
@@ -97,7 +100,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// an attribute 'a' in the Xrm.Page.attributes collection
         /// </param>
-        return (!!a && !!Xrm.Page.getAttribute(a)) || false;
+        return (a && Xrm.Page.getAttribute(a)) || false;
     },
     getCurrentId: function () {
         /// <summary>
@@ -121,7 +124,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the attribute.
         /// </param>
-        return Xrm.Page.getAttribute(a) || null;
+        return Xrm.Page.getAttribute(a);
     },
     getAttType: function (a) {
         /// <summary>
@@ -131,7 +134,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the attribute to investigate.
         /// </param>
-        return Xrm.Page.getAttribute(a).getAttributeType() || null;
+        return Xrm.Page.getAttribute(a).getAttributeType();
     },
     getAttVal: function (a) {
         ///<summary>
@@ -141,7 +144,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the attribute.
         /// </param>
-        return Xrm.Page.getAttribute(a).getValue() || null;
+        return Xrm.Page.getAttribute(a).getValue();
     },
     hasVal: function (a) {
         /// <summary>
@@ -151,7 +154,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the attribute.
         /// </param>
-        return !!Xrm.Page.getAttribute(a).getValue() || false;
+        return simpleXrm.valid(Xrm.Page.getAttribute(a).getValue()) || false;
     },
     getLookupVal: function (a) {
         /// <summary>
@@ -161,7 +164,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the lookup attribute to get the value from.
         /// </param>
-        if (!!simpleXrm.getAttVal(a)) {
+        if (simpleXrm.getAttVal(a)) {
             return Xrm.Page.getAttribute(a).getValue()[0].name
         } else {
             return null;
@@ -175,7 +178,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the lookup attribute to get the value from.
         /// </param>
-        if (!!simpleXrm.getAttVal(a)) {
+        if (simpleXrm.getAttVal(a)) {
             return Xrm.Page.getAttribute(a).getValue()[0].id
         } else {
             return null;
@@ -189,7 +192,7 @@ var simpleXrm = {
         /// <param name="a" type="String">
         /// The name of the lookup attribute to get the value from.
         /// </param>
-        if (!!simpleXrm.getAttVal(a)) {
+        if (simpleXrm.getAttVal(a)) {
             return Xrm.Page.getAttribute(a).getValue()[0].entityType
         } else {
             return null;
@@ -482,8 +485,8 @@ var simpleXrm = {
         /// changes visibility of all controls for attribute 'companyname' to visible
         /// </summary>
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-                x.setVisible(true);
-            });
+            x.setVisible(true);
+        });
     },
     hideAllCtrls: function (a) {
         /// <summary>
@@ -532,8 +535,8 @@ var simpleXrm = {
         /// sample usage: simpleXrm.lockAllCtrls('companyname') locks all controls for attribute 'companyname'
         /// </summary>
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-                x.setDisabled(true);
-            });
+            x.setDisabled(true);
+        });
     },
     unlockAllCtrls: function (a) {
         /// <summary>
@@ -541,8 +544,8 @@ var simpleXrm = {
         /// sample usage: simpleXrm.unlockAllCtrls('companyname') unlocks all controls for attribute 'companyname'
         /// </summary>
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-                x.setDisabled(false);
-            });
+            x.setDisabled(false);
+        });
     },
     relabelCtrl: function (c, v) {
         /// <summary>
@@ -557,8 +560,8 @@ var simpleXrm = {
         /// sample usage: simpleXrm.relabelAllCtrls(companyname, "Account Name") changes the label for all controls for attribute 'companyname' to "Account Name"
         /// </summary>
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-                x.setLabel(v);
-            });
+            x.setLabel(v);
+        });
     },
     allTabs: function () {
         /// <summary>
@@ -737,6 +740,27 @@ var simpleXrm = {
             return a.join(o);
         }
     },
+    cleanGuid: function (g) {
+        /// <summary>
+        /// Returns a guid without braces.
+        /// </summary>
+        var t = g;
+        try {
+            t = t.replace("{", "")
+        } catch (e) {
+        };
+        try {
+            t = t.replace("}", "")
+        } catch (e) {
+        };
+        return t;
+    },
+    wrapGuid: function (g) {
+        /// <summary>
+        /// Returns a guid with braces if g is valid, otherwise returns null.
+        /// </summary>
+        return "{" + simpleXrm.cleanGuid(g) + "}";
+    },
     newGuid: function () {
         /// <summary>
         /// Returns a string containing a GUID as "P430934A-716D-401d-A893-5FC0EA51AD01". Not secure. Not for creation of database records. Just a workaround for short-lived GUIDs that are necessary
@@ -745,33 +769,13 @@ var simpleXrm = {
         function s() {
             return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
         }
-        return (s() + s() + "-" + s() + "-4" + s().substr(0, 3) + "-" + s() + "-" + s() + s() + s()).toString();
+        return (s() + s() + "-" + s() + "-4" + s().substr(0, 3) + "-" + s() + "-" + s() + s() + s()).toString().toUpperCase();
     },
     newBracedGuid: function () {
         /// <summary>
         /// Returns a string containing a GUID wrapped in braces as "{P430934A-716D-401d-A893-5FC0EA51AD01}"
         /// </summary>
-        return "{" + simpleXrm.newGuid() + "}";
-    },
-    cleanGuid: function (g) {
-        /// <summary>
-        /// Returns a guid without braces.
-        /// </summary>
-        try {
-            return g.replace("{", "").replace("}", "");
-        } catch (e) {
-            return null;
-        }
-    },
-    wrapGuid: function (g) {
-        /// <summary>
-        /// Returns a guid with braces if g is valid, otherwise returns null.
-        /// </summary>
-        try {
-            return "{" + simpleXrm.cleanGuid(g) + "}";
-        } catch (e) {
-            return null;
-        }
+        return simpleXrm.wrapGuid(simpleXrm.newGuid());
     },
     timeStamp: function (x, y) {
         /// <summary>
@@ -877,6 +881,24 @@ var simpleXrm = {
             simpleXrm.closeSection(arguments[i]);
         };
     },
+    openSection: function (s) {
+        /// <summary>
+        /// simpleXrm.openSection() shows the specified section 's' and unlocks all attributes with controls within the section.
+        /// </summary>
+        simpleXrm.showSection(s);
+        simpleXrm.getSection(s).controls.forEach(function (c, i) {
+            c.setDisabled(false);
+            c.setVisible(true);
+        });
+    },
+    openSections: function () {
+        /// <summary>
+        /// simpleXrm.openSections() shows all sections passed as arguments and unlocks all attributes with controls within the sections.
+        /// </summary>
+        for (var i = 0; i < arguments.length; i++) {
+            simpleXrm.openSection(arguments[i]);
+        };
+    },
     closeTab: function (t) {
         /// <summary>
         /// simpleXrm.closeTab() hides the specified tab 't' and clears the value of all attributes with controls within the tab.
@@ -903,7 +925,7 @@ var simpleXrm = {
         /// </summary>
         var p = c.getEventSource();
         var mapPhoneAlpha = function (s) {
-            
+
             var n = "";
             //loop through each char, and pass it to the translation method
             for (var i = 0; i < s.length; i++) {
@@ -1034,7 +1056,11 @@ var simpleXrm = {
         Xrm.Page.ui.setFormNotification(m, "INFO", i)
     },
     clearFormNotification: function (i) {
-        Xrm.Page.ui.clearFormNotification(i);
+        try {
+            Xrm.Page.ui.clearFormNotification(i);
+        } catch (e) {
+            //no action necessary
+        }
     },
     setFieldWarning: function (a, m, i) {
         /// <summary>
@@ -1068,7 +1094,6 @@ var simpleXrm = {
         }
     },
     timedFormError: function (m, t) {
-        debugger;
         var i = simpleXrm.newGuid();
         /// <summary>Description</summary>
         /// <param name="m" type="String">
@@ -1076,27 +1101,25 @@ var simpleXrm = {
         /// </param>
         simpleXrm.setFormError(m, i);
         setTimeout(
-            function() {
+            function () {
                 simpleXrm.clearFormNotification(i);
             },
             t
         );
     },
     timedFormWarning: function (m, t) {
-        debugger;
         var i = simpleXrm.newGuid();
         /// <summary>Description</summary>
         /// <param name="m" type="String">The error message to display to the end user.</param>
         simpleXrm.setFormWarning(m, i);
         setTimeout(
-            function() {
+            function () {
                 simpleXrm.clearFormNotification(i);
             },
             t
         );
     },
     timedFormInfo: function (m, t) {
-        debugger;
         var i = simpleXrm.newGuid();
         /// <summary>Description</summary>
         /// <param name="m" type="String">The error message to display to the end user.</param>
@@ -1276,12 +1299,34 @@ var simpleXrm = {
         /// Determines whether the form data will be saved.
         /// </param>
         if (b) {
-            Xrm.Page.data.refresh(true).then(simpleXrm.timedFormInfo("The form is being saved...",2000))
+            Xrm.Page.data.refresh(true).then(simpleXrm.timedFormInfo("The form is being saved...", 2000))
         } else {
             Xrm.Page.data.refresh(false)
         }
     },
     backgroundSave: function () {
-        Xrm.Page.data.save().then(simpleXrm.timedFormInfo("The form is being saved...",2000))
+        Xrm.Page.data.save().then(simpleXrm.timedFormInfo("The form is being saved...", 2000))
+    },
+    parseValue: function (s) {
+        /// <summary>
+        /// simpleXrm.parseValue() will return the value of argument 's' as a float. Should be used to normalize currency and decimal data returned from OData endpoint which may 
+        /// be returned as objects with the numerical value contained in the ".Value" property, or which may return numerical values as strings, etc. Returns null when no value
+        /// can be identified.
+        /// </summary>
+        /// <param name="s" type="String or Object">
+        /// Pass an attribute from the results of an OData query to get its value as a valid floating point number. Note that the Dynamics CRM JavaScript API will automatically
+        /// convert floating point values to the correct format for currency or decimal fields.
+        /// </param>
+        if (s) {
+            if (typeof s === "object" && s.Value) {
+                s = s.Value;
+            } else if (typeof s === "object") {
+                s = null;
+            }
+            if (typeof s === "string") {
+                s = parseFloat(s);
+            };
+        }
+        return s || null;
     }
 }
