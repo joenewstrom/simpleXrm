@@ -1,5 +1,5 @@
 /// <summary>
-/// VERSION 1.5.0 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.5.1 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -21,33 +21,51 @@ var simpleXrm = {
         console.log("Error originating in a script using the simpleXrm.js library. Contact your CRM Administrator with the following details: Element " + e.toString() + " was not found or is invalid.");
         //throw new Error("Error: Oops! Something went wrong with a script. Contact your CRM Administrator with the following details: Element " + e.toString() + " was not found or is invalid.");
     },
+    allAttributes: function () {
+        return Xrm.Page.data.entity.attributes;
+    },
     getAttDate: function (a) {
         /// <summary>
         /// simpleXrm.getAttDate() returns a JSON date object from a date or datetime field in CRM
         /// </summary>
         var x = simpleXrm.getAttVal(a);
-        var d = {
-            year: x.getFullYear(),
-            month: x.getMonth(),
-            date: x.getDate(),
-            hours: x.getHours(),
-            minutes: x.getMinutes()
-        } || null;
-        return d
+        var d;
+        if (x) {
+            d = {
+                year: x.getFullYear(),
+                month: x.getMonth(),
+                date: x.getDate(),
+                hours: x.getHours(),
+                minutes: x.getMinutes()
+            }
+        }
+        return d || null;
     },
     parseDuration: function (d) {
         /// <summary>
         /// simpleXrm.parseDuration() returns a time in minutes from milliseconds (when calculating durations from javascript dates this will be useful.
         /// </summary>
-        x = d * 60000 || null;
-        return x;
+        var x;
+        if (d) {
+            x = d * 60000;
+        }
+        return x || null;
     },
     parseDate: function (d) {
         /// <summary>
         /// simpleXrm.parseDate() returns a new javascript date from a JSON date object 'd'.
         /// </summary>
-        x = new Date(d.year, d.month, d.date, d.hours, d.minutes).getTime() || null;
-        return x;
+        var x;
+        if (d) {
+            x = new Date(d.year, d.month, d.date, d.hours, d.minutes).getTime() || null;
+        }
+        return x || null;
+    },
+    refreshRibbon: function () {
+        Xrm.Page.ui.refreshRibbon()
+    },
+    getFormId: function () {
+        return Xrm.Page.ui.formSelector.getCurrentItem().getId();
     },
     offsetTime: function (x, y) {
         /// <summary>
@@ -115,6 +133,13 @@ var simpleXrm = {
         /// Sample usage: simpleXrm.getCurrentEntityName() returns a string such as "contact" for the record whose form is displayed on the screen.
         /// </summary>
         return Xrm.Page.data.entity.getEntityName();
+    },
+    getCurrentPrimaryName: function () {
+        /// <summary>
+        /// simpleXrm.getCurrentPrimaryName() returns the record Name for the current selected record.
+        /// Sample usage: simpleXrm.getCurrentPrimaryName() returns a string such as "A Bicycle Company" for the record whose form is displayed on the screen.
+        /// </summary>
+        return Xrm.Page.data.entity.getPrimaryAttributeValue();
     },
     getAtt: function (a) {
         /// <summary>
@@ -382,6 +407,12 @@ var simpleXrm = {
             simpleXrm.fireOnChange(arguments[i]);
         }
     },
+    addOnChange: function (o) {
+        simpleXrm.getAtt(o.attribute).addOnChange(o.handler);
+    },
+    removeOnChange: function (o) {
+        simpleXrm.getAtt(o.attribute).removeOnChange(o.handler);
+    },
     validCtrl: function (c) {
         /// <summary>
         /// validCtrl() checks the form for control 'c'
@@ -566,7 +597,7 @@ var simpleXrm = {
     allTabs: function () {
         /// <summary>
         /// simpleXrm.allTabs() returns the objects for all tabs
-        /// sample usage: simpleXrm.allTabs() returns an array [tab, tab_2, tab_3,...]
+        /// sample usage: simpleXrm.allTabs().get() returns an array [tab, tab_2, tab_3,...]
         /// </summary>
         return Xrm.Page.ui.tabs;
     },
@@ -782,13 +813,13 @@ var simpleXrm = {
         /// simpleXrm.timeStamp() sets the value of field "x" to the current date/time. Checks optional boolean value y to identify whether to overwrite existing values.
         /// </summary>
         /// <param name="x" type="String">
-        /// The field to time stamp. If the value is null, it will always be time stamped regardless of the value of y.
+        /// The field to time stamp.
         /// </param>
         /// <param name="y" type="Boolean">
         /// (Optional) Determines whether to overwrite existing values with the current time.
         /// </param>
         t = Xrm.Page.getAttribute(x).getValue();
-        if (t === null || y === true || y === undefined) {
+        if (!t || y === true) {
             var z = new Date();
             Xrm.Page.getAttribute(x).setValue(z);
             Xrm.Page.getAttribute(x).setSubmitMode("dirty");
@@ -805,11 +836,14 @@ var simpleXrm = {
         ///     Name: The primary attribute (name) of the record.
         /// </param>
         try {
-            var r = [{
-                entityType: a.LogicalName,
-                id: simpleXrm.wrapGuid(a.Id),
-                name: a.Name
-            }];
+            var r = null;
+            if (a.LogicalName && a.Id && a.Name) {
+                r = [{
+                    entityType: a.LogicalName,
+                    id: simpleXrm.wrapGuid(a.Id),
+                    name: a.Name
+                }];
+            }
             return r;
         } catch (e) {
             return null;
@@ -867,10 +901,13 @@ var simpleXrm = {
         /// </summary>
         simpleXrm.hideSection(s);
         simpleXrm.getSection(s).controls.forEach(function (c, i) {
-            c.getAttribute().setValue(null);
-            c.getAttribute().setSubmitMode("dirty");
-            c.setRequiredLevel("none");
-            c.setDisabled(true);
+            c.setVisible(false);
+            if (c.getAttribute) {
+                c.getAttribute().setValue(null);
+                c.getAttribute().setSubmitMode("dirty");
+                c.getAttribute().setRequiredLevel("none");
+                c.setDisabled(true);
+            }
         });
     },
     closeSections: function () {
@@ -899,6 +936,24 @@ var simpleXrm = {
             simpleXrm.openSection(arguments[i]);
         };
     },
+    lockSection: function (s) {
+        /// <summary>
+        /// simpleXrm.openSection() shows the specified section 's' and unlocks all attributes with controls within the section.
+        /// </summary>
+        simpleXrm.showSection(s);
+        simpleXrm.getSection(s).controls.forEach(function (c, i) {
+            c.setDisabled(true);
+            c.setVisible(true);
+        });
+    },
+    lockSections: function () {
+        /// <summary>
+        /// simpleXrm.openSections() shows all sections passed as arguments and unlocks all attributes with controls within the sections.
+        /// </summary>
+        for (var i = 0; i < arguments.length; i++) {
+            simpleXrm.lockSection(arguments[i]);
+        };
+    },
     closeTab: function (t) {
         /// <summary>
         /// simpleXrm.closeTab() hides the specified tab 't' and clears the value of all attributes with controls within the tab.
@@ -906,7 +961,9 @@ var simpleXrm = {
         simpleXrm.hideTab(t);
         simpleXrm.getTab(t).sections.forEach(function (s, i) {
             s.controls.forEach(function (c, j) {
-                c.getAttribute().setValue(null);
+                try {
+                    c.getAttribute().setValue(null);
+                } catch (e) { }
             });
         });
     },
@@ -1022,8 +1079,108 @@ var simpleXrm = {
             }
         }
     },
-    refresh: function (b) {
-        Xrm.Page.data.refresh(b);
+    replaceAll: function (x, y, z) {
+        while (x.indexOf(y) >= 0) {
+            x = x.replace(y, z)
+        }
+        return x;
+    },
+    cleanString: function (s) {
+        s = simpleXrm.replaceAll(s, "'", "");
+        s = simpleXrm.replaceAll(s, "!", "");
+        s = simpleXrm.replaceAll(s, "@", "");
+        s = simpleXrm.replaceAll(s, "#", "");
+        s = simpleXrm.replaceAll(s, "$", "");
+        s = simpleXrm.replaceAll(s, "%", "");
+        s = simpleXrm.replaceAll(s, "^", "");
+        s = simpleXrm.replaceAll(s, "&", "");
+        s = simpleXrm.replaceAll(s, "*", "");
+        s = simpleXrm.replaceAll(s, "(", "");
+        s = simpleXrm.replaceAll(s, ")", "");
+        s = simpleXrm.replaceAll(s, "-", "");
+        s = simpleXrm.replaceAll(s, "_", "");
+        s = simpleXrm.replaceAll(s, "+", "");
+        s = simpleXrm.replaceAll(s, "=", "");
+        s = simpleXrm.replaceAll(s, "{", "");
+        s = simpleXrm.replaceAll(s, "[", "");
+        s = simpleXrm.replaceAll(s, "}", "");
+        s = simpleXrm.replaceAll(s, "]", "");
+        s = simpleXrm.replaceAll(s, "|", "");
+        s = simpleXrm.replaceAll(s, "\\", "");
+        s = simpleXrm.replaceAll(s, "~", "");
+        s = simpleXrm.replaceAll(s, "`", "");
+        s = simpleXrm.replaceAll(s, ":", "");
+        s = simpleXrm.replaceAll(s, ";", "");
+        s = simpleXrm.replaceAll(s, ",", "");
+        s = simpleXrm.replaceAll(s, "<", "");
+        s = simpleXrm.replaceAll(s, ".", "");
+        s = simpleXrm.replaceAll(s, ">", "");
+        s = simpleXrm.replaceAll(s, "/", "");
+        s = simpleXrm.replaceAll(s, "?", "");
+        return s;
+    },
+    soundex: function (s) {
+        /// <summary>
+        /// simpleXrm.soundex() takes a field and encodes the value using the SoundEx algorithm.
+        /// </summary>
+        s = simpleXrm.cleanString(s);
+        var a = s.toLowerCase().split('');
+        f = a.shift(),
+        r = '',
+        codes = {
+            a: '', e: '', i: '', o: '', u: '', w: '', h: '',
+            b: 1, f: 1, p: 1, v: 1,
+            c: 2, g: 2, j: 2, k: 2, q: 2, s: 2, x: 2, z: 2,
+            d: 3, t: 3,
+            l: 4,
+            m: 5, n: 5,
+            r: 6
+        };
+
+        r = f +
+            a
+            .map(function (v, i, a) { return codes[v] })
+            .filter(function (v, i, a) { return ((i === 0) ? v !== codes[f] : v !== a[i - 1]); })
+            .join('');
+        var checkAgain = true;
+        while (checkAgain === true) {
+            checkAgain = false;
+            for (var i = 0; i < r.length; i++) {
+                if (r[i] === r[i - 1]) {
+                    checkAgain = true;
+                    r = r.substr(0, i - 1) + r.substr(i + 1, r.length);
+                }
+            }
+        }
+        return (r + '000').slice(0, 4).toUpperCase();
+    },
+    cardToOrd: function (s) {
+        var ordinals = ['zeroth', 'first', 'second', 'third' /* and so on up to "twentieth" */];
+        var tens = {
+            20: 'twenty',
+            30: 'thirty',
+            40: 'forty',
+            50: 'fifty',
+            60: 'fifty',
+            70: 'fifty',
+            80: 'fifty',
+            90: 'ninety'
+        };
+        var ordinalTens = {
+            30: 'thirtieth',
+            40: 'fortieth',
+            50: 'fiftieth'
+        };
+
+        if (cardinal <= 20) {
+            return ordinals[cardinal];
+        }
+
+        if (cardinal % 10 === 0) {
+            return ordinalTens[cardinal];
+        }
+
+        return tens[cardinal - (cardinal % 10)] + ordinals[cardinal % 10];
     },
     setFormWarning: function (m, i) {
         /// <summary>
@@ -1298,14 +1455,68 @@ var simpleXrm = {
         /// <param name="b" type="Boolean">
         /// Determines whether the form data will be saved.
         /// </param>
-        if (b) {
-            Xrm.Page.data.refresh(true).then(simpleXrm.timedFormInfo("The form is being saved...", 2000))
-        } else {
-            Xrm.Page.data.refresh(false)
-        }
+        Xrm.Page.data.refresh(b)
     },
     backgroundSave: function () {
-        Xrm.Page.data.save().then(simpleXrm.timedFormInfo("The form is being saved...", 2000))
+        Xrm.Page.data.save()
+    },
+    getRelatedLinks: function () {
+        return Xrm.Page.ui.navigation.items;
+    },
+    mapFields: function (o) {
+        /// <summary>
+        /// simpleXrm.mapFields() accepts an object with property names matching destination entity field names and property values matching the field names on the current form.
+        /// Pipe the results into the input parameter for simpleXrm.openNewRecord() for easy navigation to a pre-filled record form.
+        /// </summary>
+        var output = {
+            params: {},
+            extraqs: []
+        };
+        for (var i in o) {
+            if (o.hasOwnProperty(i)) {
+                var attribute = o[i];
+                var value = simpleXrm.getAttVal(attribute);
+                if (value && typeof value === "object" && value[0] && value[0].id && value[0].name) {
+                    var j = i + "name";
+                    output.params[i] = simpleXrm.getLookupID(o[i]);
+                    output.params[j] = simpleXrm.getLookupVal(o[i]);
+                    output.extraqs.push(i + "=" + simpleXrm.getLookupID(o[i]));
+                    output.extraqs.push(j + "=" + simpleXrm.getLookupVal(o[i]));
+                } else if (value) {
+                    output.params[i] = simpleXrm.getAttVal(o[i]);
+                    output.extraqs.push(i + "=" + simpleXrm.getAttVal(o[i]).toString());
+                }
+            }
+        }
+        return output;
+    },
+    extendFieldMap: function (o) {
+        /// <summary>simpleXrm.extendFieldMap() accepts a field mapping object as input argument o.input and adds name-value pairs defined by the as properties</summary>
+        /// <param name="o" type="Object">Object with properties:
+        ///     o.input: an object with properties 'params' and 'extraqs' such as that produced by simpleXrm.mapFields().
+        ///     o.add: an object with a series of name-value pairs to be appended to the input object. You can use this to statically set values to be passed to a form.
+        /// </param>
+        var output = o.input;
+        for (var i in o.add) {
+            output.params[i] = o.add[i];
+            output.extraqs.push(i + "=" + o.add[i]);
+        }
+        return output;
+    },
+    openNewRecord: function (o) {
+        /// <summary>
+        /// simpleXrm.openNewRecord() opens a record defined by input parameter 'o' (object) with properties entityType (entity logical name), params (object with key-value pairs
+        /// for field pre-filling), and extraqs (array with string equivalents to be used with URI encoding in the event of Xrm.Utility failure).
+        /// </summary>
+        var id = o.id || null;
+        if ((typeof Xrm != "undefined") && (typeof Xrm.Utility != "undefined")) {
+            Xrm.Utility.openEntityForm(o.entityType, id, o.params);
+        } else {
+            var features = "location=no,menubar=no,status=no,toolbar=no,resizable=yes";
+            var url = Xrm.Page.context.getClientUrl();
+            window.open(url + "/main.aspx?etn=" + o.entityType.toLowerCase() + "&pagetype=entityrecord&extraqs=" + encodeURIComponent(o.extraqs.join("&")), "_blank", features,
+                false);
+        }
     },
     parseValue: function (s) {
         /// <summary>
@@ -1328,5 +1539,101 @@ var simpleXrm = {
             };
         }
         return s || null;
+    },
+    refreshWebResource: function (n) {
+        /// <summary>simpleXrm.refreshWebResource() will refresh the web resource with name 'n'.</summary>
+        /// <param name="n" type="String">The name of the web resource to refresh.</param>
+        var webResource = simpleXrm.getCtrl(n);
+        if (webResource && webResource.getSrc()) {
+            var parameter = webResource.getSrc();
+            parameter += "?Data='" + simpleXrm.newGuid() + "'";
+            webResource.setSrc(parameter);
+        }
+    },
+    calcPriceListPrice: function (o) {
+        /// <summary>
+        /// example: simpleXrm.calcPriceListPrice({
+        ///     pricingMethodCode: 2,
+        ///     listPrice: 307.70,
+        ///     percentage: 95,
+        ///     roundingPolicyCode: 2,
+        ///     roundingOptionCode: 2,
+        ///     roundingOptionAmount: 5
+        /// }) //returns 295; (307.70 * 0.95 = 292.315 which is rounded up to the nearest multiple of 5)
+        var round = true;
+        if (o.roundingPolicyCode == 1) {
+            round = false;
+        };
+        switch (o.pricingMethodCode) {
+            case 1:
+                p = o.amount;
+                round = false;
+                break;
+            case 2:
+                p = o.percentage * o.listPrice / 100;
+                break;
+            case 3:
+                p = ((o.percentage + 100) * o.currentCost) / 100;
+                break;
+            case 4:
+                p = ((100 * o.currentCost) / (100 - o.percentage));
+                break;
+            case 5:
+                p = ((o.percentage + 100) * o.standardCost) / 100;
+                break;
+            case 6:
+                p = ((100 * o.standardCost) / (100 - o.percentage));
+                break;
+            default:
+                p = o.listPrice;
+        };
+        var p1 = null;
+        var p2 = null;
+        if (round) {
+            switch (o.roundingPolicyCode) {
+                case 2: //round up
+                    if (o.roundingOptionCode == 1) { //ends in
+                        p1 = 10 * Math.floor(p / 10) + o.roundingOptionAmount;
+                        if (p > p1) {
+                            p1 += 10;
+                        };
+                    } else if (o.roundingOptionCode == 2) { //multiple of
+                        p1 = Math.ceil(p / o.roundingOptionAmount) * (o.roundingOptionAmount);
+                    };
+                    break;
+                case 3: //round down
+                    if (o.roundingOptionCode == 1) { //ends in
+                        p1 = 10 * Math.floor(p / 10) + o.roundingOptionAmount;
+                        if (p < p1) {
+                            p1 -= 10;
+                        };
+                    } else if (o.roundingOptionCode == 2) { //multiple of
+                        p1 = Math.floor(p / o.roundingOptionAmount) * (o.roundingOptionAmount);
+                    };
+                    break;
+                case 4: //round nearest
+                    if (o.roundingOptionCode == 1) { //ends in
+                        p1 = 10 * Math.floor(p / 10) + o.roundingOptionAmount;
+                        if (p > p1) {
+                            p2 = p1 + 10;
+                        } else if (p < p1) {
+                            p1 -= 10;
+                            p2 = p1 + 10;
+                        };
+                        if (Math.abs(p - p1) > Math.abs(p - p2)) { //only concerned about the case where p2 is closer to p than p1
+                            p1 = p2;
+                        };
+                    } else if (o.roundingOptionCode == 2) { //multiple of
+                        p1 = Math.round(p / o.roundingOptionAmount) * (o.roundingOptionAmount);
+                    }
+                    break;
+                default:
+                    break; //or throw a fault here?
+            }
+            if (p1) {
+                p = p1;
+            };
+        };
+        return p;
     }
 }

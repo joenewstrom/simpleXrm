@@ -1,5 +1,5 @@
 /// <summary>
-/// VERSION 1.5.0 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.5.1 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -55,9 +55,15 @@ var simpleXrmRest = {
         /// </summary>
         /// <param name="a" type="Object">
         /// Object containing the following properties:
+        /// a.type: either "GET" or "POST" (if not specified, will default to "GET")
+        /// a.method: If specified, calls a X-HTTP-Method (such as "MERGE" which will update records)
+        /// a.data: when creating a record, this is the object that contains the initial values
         /// a.query: The query string to append to the base OData URI. For simplicity, this can be built with simpleXrmRest.buildQuery().
         /// a.callback: The callback function to be executed on successful response by the OData Endpoint.
         /// </param>
+        if (!window.JSON) {
+            simpleXrmRest.fakeIt()
+        };
         var oDataUri = Xrm.Page.context.getClientUrl();
         if (simpleXrm.valid(oDataUri)) {
             oDataUri += "/XRMServices/2011/OrganizationData.svc/" + a.query.toString();
@@ -66,28 +72,103 @@ var simpleXrmRest = {
             } else if (window.ActiveXObject) {
                 XHR = new ActiveXObject("Microsoft.XMLHTTP");
             } else {
-                simpleXrm.error("We encountered an unexpected issue. Please check your form data before proceeding. Info for Admin: User's browser may not support one of the requested scripts. Please attempt using FireFox or IE 8+");
+                simpleXrm.error("We encountered an unexpected issue. Please check your form data before proceeding. Info for Admin: User's browser may not support"
+                    + " one of the requested scripts. Please attempt using FireFox or IE 8+");
                 return null;
             }
-            XHR.open("GET", encodeURI(oDataUri), false);
+            var type = a.type || "GET";
+            var type = type.toUpperCase();
+            var data = null;
+            if (type === "POST" && a.data) {
+                data = window.JSON.stringify(a.data);
+            }
+            XHR.open(type, encodeURI(oDataUri), true);
             XHR.setRequestHeader("Accept", "application/json");
             XHR.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+            if (type === "POST" && a.method) {
+                XHR.setRequestHeader("X-HTTP-Method", a.method.toUpperCase()); //use MERGE for Update statements
+            }
             XHR.onreadystatechange = a.callback;
-            XHR.send();
+            if (!data) {
+                XHR.send();
+            } else {
+                XHR.send(data);
+            }
         }
+    },
+    associate: function (a) {
+        var oDataUri = Xrm.Page.context.getClientUrl();
+        if (simpleXrm.valid(oDataUri)) {
+            oDataUri += "/XRMServices/2011/OrganizationData.svc/";
+            var association = {
+                uri: oDataUri + a.parentEntity + "Set(guid'" + a.parentId + "')"
+            };
+            simpleXrmRest.XHR({
+                query: a.childEntity + "Set(guid'" + a.childId + "')/$links/" + a.childForeignKey,
+                callback: function () {
+                    if (this.readyState === 4) {
+                        req.onreadystatechange = null;
+                        if (this.status === 204 || this.status === 1223) {
+                            a.callback();
+                        }
+                    }
+                }
+            });
+        }
+    },
+    disassociate: function (a) {
+        var query = a.parentEntity + "Set(guid'" + a.parentId + "')/$links/" + a.childForeignKey + "(guid'" + childId + "')";
+        simpleXrmRest.XHR({
+            query: query,
+            type: "POST",
+            method: "DELETE",
+            callback: function () {
+                if (this.readyState === 4) {
+                    req.onreadystatechange = null;
+                    if (this.status === 204 || this.status === 1223) {
+                        a.callback();
+                    }
+                }
+            }
+        });
+    },
+    disassociateAll: function (a) {
+        var query = a.parentEntity + "Set?$select=" + a.childForeignKey + "/" + a.childPrimaryKey + "&$expand=" + a.childForeignKey + "&$filter=" + a.parentPrimaryKey + " eq guid'" + a.parentId + "'";
+        simpleXrmRest.XHR({
+            query: query,
+            callback: function () {
+                if (simpleXrmRest.parseOnReady(this)) {
+                    var results = simpleXrmRest.getRetrieveMultipleResults(this);
+                    if (results && results.length > 0) {
+                        for (var i = 0; i < results.length; i++) {
+                            simpleXrmRest.disassociate({
+                                parentEntity: a.parentEntity,
+                                parentId: a.parentId,
+                                childForeignKey: a.childForeignKey,
+                                childId: results[i][a.childPrimaryKey]
+                            });
+                        };
+                        a.callback();
+                    }
+                }
+            }
+        })
     },
     query: function (a) {
         simpleXrmRest.XHR({
             query: simpleXrmRest.buildQuery({
-                entitySet: a.entitySet,
-                select: simpleXrmRest.select(a.select),
-                filter: simpleXrmRest.filter(a.filter),
-                orderBy: simpleXrmRest.orderBy(a.orderBy),
-                expand: simpleXrmRest.expand(a.expand),
-                skip: simpleXrmRest.skip(a.skip),
-                top: simpleXrmRest.top(a.top)
+                entitySet: a.entity + "Set" || null,
+                select: simpleXrmRest.select(a.select) || null,
+                filter: simpleXrmRest.filter(a.filter) || null,
+                orderBy: simpleXrmRest.orderBy(a.orderBy) || null,
+                expand: simpleXrmRest.expand(a.expand) || null,
+                skip: simpleXrmRest.skip(a.skip) || null,
+                top: simpleXrmRest.top(a.top) || null
             }),
-            callback: a.callback
+            type: a.type || null,
+            method: a.method || null,
+            data: a.data || null,
+            callback: a.callback || null
         })
     },
     mapResults: function (o) {
@@ -120,45 +201,45 @@ var simpleXrmRest = {
         /// a.top: The $top query parameter typically constructed using simpleXrm.oData.top()
         /// </param>
         var q = "";
-        var e = a.entitySet;
-        var s = a.select;
-        var f = a.filter;
-        var o = a.orderBy;
-        var x = a.expand;
-        var k = a.skip;
-        var t = a.top;
-        if (simpleXrm.valid(e)) {
+        var e = a.entitySet || null;
+        var s = a.select || null;
+        var f = a.filter || null;
+        var o = a.orderBy || null;
+        var x = a.expand || null;
+        var k = a.skip || null;
+        var t = a.top || null;
+        if (e) {
             q += e.toString() + "?";
         };
-        if (simpleXrm.valid(s)) {
+        if (s) {
             q += s.toString();
         };
-        if (simpleXrm.valid(f)) {
-            if (simpleXrm.valid(s)) {
+        if (f) {
+            if (s) {
                 q += "&"
             };
             q += f.toString();
         };
-        if (simpleXrm.valid(o)) {
-            if (simpleXrm.valid(s) || simpleXrm.valid(f)) {
+        if (o) {
+            if (s || f) {
                 q += "&"
             };
             q += o.toString();
         };
-        if (simpleXrm.valid(x)) {
-            if (simpleXrm.valid(s) || simpleXrm.valid(f) || simpleXrm.valid(o)) {
+        if (x) {
+            if (s || f || o) {
                 q += "&"
             };
             q += x.toString();
         };
-        if (simpleXrm.valid(k)) {
-            if (simpleXrm.valid(s) || simpleXrm.valid(f) || simpleXrm.valid(o) || simpleXrm.valid(x)) {
+        if (k) {
+            if (s || f || o || x) {
                 q += "&"
             };
             q += k.toString();
         };
-        if (simpleXrm.valid(t)) {
-            if (simpleXrm.valid(s) || simpleXrm.valid(f) || simpleXrm.valid(o) || simpleXrm.valid(x) || simpleXrm.valid(k)) {
+        if (t) {
+            if (s || f || o || x || k) {
                 q += "&"
             };
             q += t.toString();
@@ -170,74 +251,114 @@ var simpleXrmRest = {
         /// <param name="a" type="String">The attribute that the query will use to filter results. (case sensitive)</param>
         /// <param name="o" type="String">The operator that the filter will use to filter. See list from SDK: http://msdn.microsoft.com/en-us/library/gg309461.aspx#BKMK_filter (case sensitive)</param>
         /// <param name="v" type="String">The value that the operator will use to filter against the attribute. Strings must use "'double quote'" notation. (case sensitive)</param>
-        var filter = "";
-        if (a.operator === "startswith" || a.operator === "substringof" || a.operator === "endswith") {
-            filter += a.operator + "(" + a.attribute + "," + a.value + ")";
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            var filter = "";
+            if (a.operator === "startswith" || a.operator === "substringof" || a.operator === "endswith") {
+                filter += a.operator + "(" + a.attribute + "," + a.value + ")";
+            } else {
+                filter += a.attribute + " " + a.operator + " " + a.value;
+            }
+            return filter;
         } else {
-            filter += a.attribute + " " + a.operator + " " + a.value;
+            return "";
         }
-        return filter;
     },
     groupFiltersOr: function () {
         /// <summary>simpleXrmRest.groupFiltersOr() constructs a joined "OR" aggregate filter comprised of multiple oData filters.</summary>
         /// <param name="arguments[i]" type="String">An OData filter string (typically constructed using simpleXrm.oDataFilter()). (case sensitive)</param>
-        return "(" + arguments.join(" or ") + ")";
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            return "(" + arguments.join(" or ") + ")";
+        } else {
+            return "";
+        }
     },
     groupFiltersAnd: function () {
         /// <summary>simpleXrmRest.groupFiltersOr() constructs a joined "AND" aggregate filter comprised of multiple oData filters.</summary>
         /// <param name="arguments[i]" type="String">An OData filter string (typically constructed using simpleXrm.oDataFilter()). (case sensitive)</param>
-        return "(" + arguments.join(" and ");
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            return "(" + arguments.join(" and ");
+        } else {
+            return "";
+        }
     },
     filter: function () {
         /// <summary>simpleXrmRest.oDataFilter() builds and returns a $filter parameter from individual filter components and group constructors for an OData query. Multiple filters passed as arguments will be grouped "AND" by default.</summary>
         /// <param name="arguments[i]" type="String">A single or aggregate filter to be added to the filtering criteria. (case sensitive)</param>
-        var f = [];
-        for (var i = 0; i < arguments.length; i++) {
-            if (typeof arguments[i] === "object") {
-                f.push(simpleXrmRest.buildFilter(arguments[i]));
-            } else if (typeof arguments[i] === "string") {
-                f.push(arguments[i]);
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            var f = [];
+            for (var i = 0; i < arguments.length; i++) {
+                if (typeof arguments[i] === "object") {
+                    f.push(simpleXrmRest.buildFilter(arguments[i]));
+                } else if (typeof arguments[i] === "string") {
+                    f.push(arguments[i]);
+                }
             }
+            return "$filter=" + simpleXrm.link(f, " and ");
+        } else {
+            return "";
         }
-        return "$filter=" + simpleXrm.link(f, " and ");
     },
     select: function () {
         /// <summary>simpleXrmRest.select() builds and returns a $select parameter for attribute data from the primary entity for an OData query.</summary>
         /// <param name="arguments[i]" type="String">An attribute on the primary entity to be returned by the OData query. (case sensitive)</param>
-        return "$select=" + simpleXrm.link(arguments, ",");
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            return "$select=" + simpleXrm.link(arguments, ",");
+        } else {
+            return "";
+        }
     },
     selectFromExpanded: function (x) {
-        /// <summary>simpleXrm.oData.selectFromExpanded() builds and returns an input argument for simpleXrm.oDataSelect() that handles fields from related (expanded) records.</summary>
+        /// <summary>simpleXrm.oData.selectFromExpanded() builds and returns an input argument for simpleXrmRest.oDataSelect() that handles fields from related (expanded) records.</summary>
         /// <param name="x" type="String">The name of the relationship between the primary entity and the related (expanded) entity. (case sensitive)</param>
         /// <param name="arguments[i] (where i > 0)" type="String">The name of the attribute(s) on the related (expanded) entity to be returned. Add an additional argument for each parameter from this relationship. (case sensitive)</param>
-        var y = [];
-        for (var i = 1; i < arguments.length; i++) {
-            y.push(x.toString() + "/" + arguments[i].toString());
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            var y = [];
+            for (var i = 1; i < arguments.length; i++) {
+                y.push(x.toString() + "/" + arguments[i].toString());
+            }
+            return simpleXrm.link(y, ",");
+        } else {
+            return "";
         }
-        return simpleXrm.link(y, ",");
     },
     expand: function () {
         /// <summary>simpleXrmRest.expand() builds and returns an $expand parameter for a related entity in an OData query.</summary>
         /// <param name="arguments[0]" type="String">The relationship name that connects the expanded entity to the primary entity. (case sensitive)</param>
         /// <param name="arguments[i] (where i > 0)" type="String">An attribute on the expanded entity to be returned by the OData query</param>
-        return "$expand=" + simpleXrm.link(arguments, ",");
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            return "$expand=" + simpleXrm.link(arguments, ",");
+        } else {
+            return "";
+        }
     },
     orderBy: function () {
         /// <summary>simpleXrmRest.orderBy() builds and returns an $orderby parameter for an OData query.</summary>
         /// <param name="arguments[0]" type="String">The name of an attribute that results should be ordered by. Optionally follow by " desc" to list in descending order.</param>
-        return "$orderby=" + simpleXrm.link(arguments, ",");
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            return "$orderby=" + simpleXrm.link(arguments, ",");
+        } else {
+            return "";
+        }
     },
     skip: function (n) {
         /// <summary>simpleXrmRest.skip() builds and returns a $skip parameter for an OData query.</summary>
         /// <param name="n" type="int32">The number of records to skip.</param>
-        var y = "$skip=" + n.toString();
-        return y;
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            var y = "$skip=" + n.toString();
+            return y;
+        } else {
+            return "";
+        }
     },
     top: function (n) {
         /// <summary>simpleXrmRest.top() builds and returns a $top parameter for an OData query.</summary>
         /// <param name="n" type="int32">The number of records to select from the top of the query.</param>
-        var y = "$top=" + n.toString();
-        return y;
+        if (arguments && arguments.length > 0 && arguments[0]) {
+            var y = "$top=" + n.toString();
+            return y;
+        } else {
+            return "";
+        }
     },
     queryLookup: function (a) {
         /// <summary>simpleXrmRest.queryLookup() returns the values of attributes arguments[1,2,...] from the selected record of lookup 'a'.</summary>
@@ -259,7 +380,7 @@ var simpleXrmRest = {
     },
     parseOnReady: function (x) {
         if (x.readyState === 4) {
-            if (x.status === 200) {
+            if (x.status === 200 || x.status === 201) {
                 var a = JSON.parse(x.responseText).d;
                 return a;
             }
@@ -294,6 +415,14 @@ var simpleXrmRest = {
                 y = b;
             }
         };
+        return y;
+    },
+    getCreateResults: function (x) {
+        var y = null;
+        var a = simpleXrmRest.parseOnReady(x);
+        if (simpleXrm.valid(a)) {
+            var y = a;
+        }
         return y;
     },
     setPriceListPrice: function (a) {
@@ -331,21 +460,14 @@ var simpleXrmRest = {
                 callback: function () { //x is data, y is textStatus, z is XMLHttpRequest???
                     var q = simpleXrmRest.normalizeResults(this);
                     if (simpleXrm.valid(q)) {
-                        c.currentCost = q.CurrentCost.Value;
-                        if (typeof c.currentCost === "string") {
-                            c.currentCost = parseFloat(c.currentCost);
-                        };
+                        c.currentCost = simpleXrm.parseValue(q.CurrentCost.Value);
                         c.productNumber = q.ProductNumber;
-                        c.listPrice = q.Price.Value;
-                        if (typeof c.listPrice === "string") {
-                            c.listPrice = parseFloat(c.listPrice);
-                        };
-                        c.standardCost = q.StandardCost.Value;
-                        if (typeof c.standardCost === "string") {
-                            c.standardCost = parseFloat(c.standardCost);
-                        };
-                        simpleXrm.setAttVal(c.listPriceField, c.listPrice);
-                        simpleXrm.sendAttAlways(c.listPriceField);
+                        c.listPrice = simpleXrm.parseValue(q.Price.Value);
+                        c.standardCost = simpleXrm.parseValue(q.StandardCost.Value);
+                        if (c.listPriceField) {
+                            simpleXrm.setAttVal(c.listPriceField, c.listPrice);
+                            simpleXrm.sendAttAlways(c.listPriceField);
+                        }
                         simpleXrmRest.XHR({ //query the price list item
                             query: simpleXrmRest.buildQuery({
                                 entitySet: "ProductPriceLevelSet",
@@ -355,24 +477,18 @@ var simpleXrmRest = {
                             callback: function () {
                                 var r = simpleXrmRest.normalizeResults(this);
                                 if (r) {
-                                    c.amount = r.Amount.Value;
-                                    if (typeof c.amount === "string") {
-                                        c.amount = parseFloat(c.amount);
-                                    };
-                                    c.percentage = r.Percentage;
-                                    if (typeof c.percentage === "string") {
-                                        c.percentage = parseFloat(c.percentage);
-                                    };
-                                    c.pricingMethodCode = r.PricingMethodCode.Value;
+                                    c.amount = simpleXrm.parseValue(r.Amount.Value);
+                                    c.percentage = simpleXrm.parseValue(r.Percentage);
+                                    c.pricingMethodCode = simpleXrm.parseValue(r.PricingMethodCode.Value);
                                     c.unit = simpleXrm.parseRESTLookup(r.UoMId);
-                                    simpleXrm.setAttVal(c.unitField, c.unit);
-                                    simpleXrm.sendAttAlways(c.unitField);
-                                    c.roundingOptionCode = r.RoundingOptionCode.Value;
-                                    c.roundingPolicyCode = r.RoundingPolicyCode.Value;
-                                    c.roundingOptionAmount = r.RoundingOptionAmount;
-                                    if (typeof c.roundingOptionAmount === "string") {
-                                        c.roundingOptionAmount = parseFloat(c.roundingOptionAmount);
-                                    }; var p = null;
+                                    if (c.unitField) {
+                                        simpleXrm.setAttVal(c.unitField, c.unit);
+                                        simpleXrm.sendAttAlways(c.unitField);
+                                    }
+                                    c.roundingOptionCode = simpleXrm.parseValue(r.RoundingOptionCode.Value);
+                                    c.roundingPolicyCode = simpleXrm.parseValue(r.RoundingPolicyCode.Value);
+                                    c.roundingOptionAmount = simpleXrm.parseValue(r.RoundingOptionAmount);
+                                    var p = null;
                                     var round = true;
                                     if (c.roundingPolicyCode == 1) {
                                         round = false;
