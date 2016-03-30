@@ -14,6 +14,9 @@ var simpleXrmFetch = {
             f += " distinct='true'"
         } else {
             f += " distinct='false'"
+        };
+        if (o.aggregate) {
+            f+= " aggregate='true'"
         }
         f += ">";
         var g = "</fetch>"
@@ -41,7 +44,10 @@ var simpleXrmFetch = {
                 f += "<attribute name='" + a[i].name + "'";
                 if (!!a[i].alias) {
                     f += " alias='" + a[i].alias + "'";
-                }
+                };
+                if (!!a[i].aggregate) {
+                    f += " aggregate='" + a[i].aggregate + "'";
+                };
                 f += " />"
             }
         }
@@ -80,7 +86,7 @@ var simpleXrmFetch = {
                 for (var i = 0; i < o.conditions.length; i++) {
                     var x = o.conditions[i];
                     if (x.attribute && x.operator) {
-                        f += "<condition attribute='" + x.attribute + "' operator='" + o.conditions[i].operator + "'";
+                        f += "<condition attribute='" + x.attribute + "' operator='" + o.conditions[i].operator + "'"; 
                         if (x.operator === "in" || x.operator === "not-in") {
                             if (x.values) {
                                 f += "/>"
@@ -99,6 +105,7 @@ var simpleXrmFetch = {
                                     };
                                     f += "</value>"
                                 }
+                                f += "</condition>"
                             }
                         } else {
                             if (o.conditions[i].uiname) {
@@ -155,7 +162,7 @@ var simpleXrmFetch = {
         }
         return h.join("");
     },
-
+    
     addCustomFilter: function (o) {
         /// <summary>
         /// simpleXrmFetch.addCustomFilter() adds a filter defined by FetchXML passed as a string to the 'filter' property of input parameter 'o' (JSON).
