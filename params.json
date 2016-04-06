@@ -1,0 +1,6 @@
+{
+  "name": "simpleXrm",
+  "tagline": "Save time writing client side code for Dynamics CRM. Write interactive forms for Dynamics CRM using the javascript API. Less time on syntax, more time on business logic.",
+  "body": "### Welcome to simpleXrm.js\r\nsimpleXrm.js is a JavaScript library that provides a layer of abstraction between client side code (such as Dynamics CRM form scripts and SPAs) and the Microsoft Dynamics CRM JavaScript API. For more information [browse the source](https://https://github.com/joenewstrom/simpleXrm/).\r\n\r\n### Author and Principal Developer\r\nJoe Newstrom (@joenewstrom) develops and maintains simpleXrm.js and is always interested in contributions.\r\n\r\n### Support or Contact\r\nHaving trouble with simpleXrm.js? Appalled by my lack of documentation? Find a bug?  Send me a message at [joe.newstrom@arrow-lift.com](mailto:joe.newstrom@arrow-lift.com) and I’ll help you sort it out.\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
