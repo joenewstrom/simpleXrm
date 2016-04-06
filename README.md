@@ -1,3 +1,6 @@
+
+![simpleXrm.js](https://github.com/joenewstrom/simpleXrm/blob/master/simplexrm.png)
+----------
 simpleXrm
 =========
 
