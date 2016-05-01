@@ -1,5 +1,5 @@
 /// <summary>
-/// VERSION 1.5.1 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.7.2 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -28,8 +28,7 @@ var simpleXrm = {
         /// <summary>
         /// simpleXrm.getAttDate() returns a JSON date object from a date or datetime field in CRM
         /// </summary>
-        var x = simpleXrm.getAttVal(a);
-        var d;
+        var x = simpleXrm.getAttVal(a), d;
         if (x) {
             d = {
                 year: x.getFullYear(),
@@ -126,6 +125,12 @@ var simpleXrm = {
         /// Sample usage: simpleXrm.getCurrentId() returns a GUID as a string for the record whose form is displayed on the screen.
         /// </summary>
         return Xrm.Page.data.entity.getId();
+    },
+    getCurrentUserId: function () {
+        Xrm.Page.context.getUserId();
+    },
+    getCurrentUserName: function () {
+        Xrm.Page.context.getUserName();
     },
     getCurrentEntityName: function () {
         /// <summary>
@@ -235,11 +240,16 @@ var simpleXrm = {
         /// The value passed to the target attribute. Check Dynamics CRM SDK for acceptable values based on different attribute types. Note: rejects v = null. Use simpleXrm.clearAttVal() to clear
         /// field value.
         /// </param>
-        try {
-            Xrm.Page.getAttribute(a).setValue(v);
-        } catch (e) {
-            simpleXrm.error(a, "Could not set the value of attribute " + a + " to value " + v.toString() + ".")
+        if (v || v === false || v === 0) {
+            try {
+                Xrm.Page.getAttribute(a).setValue(v);
+            } catch (e) {
+                simpleXrm.error(a, "Could not set the value of attribute " + a + " to value " + v.toString() + ".")
+            }
+        } else {
+            simpleXrm.clearAttVal(a);
         }
+
     },
     clearAttVal: function (a) {
         /// <summary>
@@ -509,24 +519,28 @@ var simpleXrm = {
             x.removeOption(o);
         });
     },
-    showAllCtrls: function (a) {
+    showAllCtrls: function () {
         /// <summary>
         /// simpleXrm.showAllCtrls() shows all controls for attribute 'a'
         /// sample usage: simpleXrm.showAllCtrls('companyname')
         /// changes visibility of all controls for attribute 'companyname' to visible
         /// </summary>
-        simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-            x.setVisible(true);
-        });
+        for (var j = 0, len = arguments.length; j < len; j++) {
+            simpleXrm.getAllCtrls(arguments[j]).forEach(function (x, i) {
+                x.setVisible(true);
+            });
+        }
     },
     hideAllCtrls: function (a) {
         /// <summary>
         /// simpleXrm.hideAllCtrls() hides all controls for attribute 'a'
         /// sample usage: simpleXrm.hideAllCtrls('companyname') changes visibility of all controls for attribute 'companyname' to hidden
         /// </summary>
-        simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-            x.setVisible(false);
-        });
+        for (var j = 0, len = arguments.length; j < len; j++) {
+            simpleXrm.getAllCtrls(arguments[j]).forEach(function (x, i) {
+                x.setVisible(false);
+            });
+        }
     },
     lockCtrl: function (c) {
         /// <summary>
@@ -560,23 +574,27 @@ var simpleXrm = {
             simpleXrm.unlockCtrl(arguments[i]);
         }
     },
-    lockAllCtrls: function (a) {
+    lockAllCtrls: function () {
         /// <summary>
         /// simpleXrm.lockAllCtrls() locks all controls for attribute 'a'
         /// sample usage: simpleXrm.lockAllCtrls('companyname') locks all controls for attribute 'companyname'
         /// </summary>
-        simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-            x.setDisabled(true);
-        });
+        for (var j = 0, len = arguments.length; j < len; j++) {
+            simpleXrm.getAllCtrls(arguments[j]).forEach(function (x, i) {
+                x.setDisabled(true);
+            });
+        }
     },
-    unlockAllCtrls: function (a) {
+    unlockAllCtrls: function () {
         /// <summary>
         /// simpleXrm.unlockAllCtrls() unlocks all controls for attribute 'a'
         /// sample usage: simpleXrm.unlockAllCtrls('companyname') unlocks all controls for attribute 'companyname'
         /// </summary>
-        simpleXrm.getAllCtrls(a).forEach(function (x, i) {
-            x.setDisabled(false);
-        });
+        for (var j = 0, len = arguments.length; j < len; j++) {
+            simpleXrm.getAllCtrls(arguments[j]).forEach(function (x, i) {
+                x.setDisabled(false);
+            });
+        }
     },
     relabelCtrl: function (c, v) {
         /// <summary>
@@ -818,7 +836,7 @@ var simpleXrm = {
         /// <param name="y" type="Boolean">
         /// (Optional) Determines whether to overwrite existing values with the current time.
         /// </param>
-        t = Xrm.Page.getAttribute(x).getValue();
+        var t = Xrm.Page.getAttribute(x).getValue();
         if (!t || y === true) {
             var z = new Date();
             Xrm.Page.getAttribute(x).setValue(z);
@@ -1079,9 +1097,9 @@ var simpleXrm = {
             }
         }
     },
-    replaceAll: function (x, y, z) {
+    replaceAll: function (x,y,z) {
         while (x.indexOf(y) >= 0) {
-            x = x.replace(y, z)
+            x = x.replace(y,z)
         }
         return x;
     },
@@ -1124,9 +1142,7 @@ var simpleXrm = {
         /// simpleXrm.soundex() takes a field and encodes the value using the SoundEx algorithm.
         /// </summary>
         s = simpleXrm.cleanString(s);
-        var a = s.toLowerCase().split('');
-        f = a.shift(),
-        r = '',
+        var a = s.toLowerCase().split(''), f = a.shift(), r = '',
         codes = {
             a: '', e: '', i: '', o: '', u: '', w: '', h: '',
             b: 1, f: 1, p: 1, v: 1,
@@ -1136,7 +1152,7 @@ var simpleXrm = {
             m: 5, n: 5,
             r: 6
         };
-
+ 
         r = f +
             a
             .map(function (v, i, a) { return codes[v] })
@@ -1152,35 +1168,49 @@ var simpleXrm = {
                 }
             }
         }
-        return (r + '000').slice(0, 4).toUpperCase();
+        return (r + '000').slice(0, 4).toUpperCase();        
     },
     cardToOrd: function (s) {
-        var ordinals = ['zeroth', 'first', 'second', 'third' /* and so on up to "twentieth" */];
-        var tens = {
-            20: 'twenty',
-            30: 'thirty',
-            40: 'forty',
-            50: 'fifty',
-            60: 'fifty',
-            70: 'fifty',
-            80: 'fifty',
-            90: 'ninety'
-        };
-        var ordinalTens = {
-            30: 'thirtieth',
-            40: 'fortieth',
-            50: 'fiftieth'
-        };
+            /// <summary>
+            /// WORK IN PROGRESS
+            /// simpleXrm.cardToOrd() attempts to translate cardinal numbers (e.g. "90") to ordinal numbers (e.g. "ninety").
+            /// unit testing needs to be performed
+            /// </summary>
+            /// <param name="s" type="String">
+            /// The string to translate to ordinal numbering.
+            /// </param>
+            var ordinals = ['zeroth', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh',
+            'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 
+            'sixteenth', 'seventeenth', 'eighteenth', 'nineteenth', 'twentieth'];
+            var tens = {
+                20: 'twenty',
+                30: 'thirty',
+                40: 'forty',
+                50: 'fifty',
+                60: 'fifty',
+                70: 'fifty',
+                80: 'fifty',
+                90: 'ninety'
+            };
+            var ordinalTens = {
+                30: 'thirtieth',
+                40: 'fortieth',
+                50: 'fiftieth',
+                60: 'sixtieth',
+                70: 'seventieth',
+                80: 'eightieth',
+                90: 'ninetieth'
+            };
+            var cardinal = s;
+            if (cardinal <= 20) {
+                return ordinals[cardinal];
+            }
 
-        if (cardinal <= 20) {
-            return ordinals[cardinal];
-        }
+            if (cardinal % 10 === 0) {
+                return ordinalTens[cardinal];
+            }
 
-        if (cardinal % 10 === 0) {
-            return ordinalTens[cardinal];
-        }
-
-        return tens[cardinal - (cardinal % 10)] + ordinals[cardinal % 10];
+            return tens[cardinal - (cardinal % 10)] + ordinals[cardinal % 10];
     },
     setFormWarning: function (m, i) {
         /// <summary>
@@ -1315,7 +1345,7 @@ var simpleXrm = {
                 //no action
             } else if (y <= z && y >= 0) {
                 //handle case only b has data, set a to remainder
-                simpleXrm.setAttVal(a, s - y);
+                simpleXrm.setAttVal(a, z - y);
             } else if (y > z) {
                 simpleXrm.setAttVal(b, z);
             };
@@ -1457,8 +1487,8 @@ var simpleXrm = {
         /// </param>
         Xrm.Page.data.refresh(b)
     },
-    backgroundSave: function () {
-        Xrm.Page.data.save()
+    backgroundSave: function (o) {
+        Xrm.Page.data.save().then(o.callback, o.failure); 
     },
     getRelatedLinks: function () {
         return Xrm.Page.ui.navigation.items;
@@ -1480,7 +1510,7 @@ var simpleXrm = {
                     var j = i + "name";
                     output.params[i] = simpleXrm.getLookupID(o[i]);
                     output.params[j] = simpleXrm.getLookupVal(o[i]);
-                    output.extraqs.push(i + "=" + simpleXrm.getLookupID(o[i]));
+                    output.extraqs.push(i + "=" + simpleXrm.wrapGuid(simpleXrm.getLookupID(o[i])));
                     output.extraqs.push(j + "=" + simpleXrm.getLookupVal(o[i]));
                 } else if (value) {
                     output.params[i] = simpleXrm.getAttVal(o[i]);
@@ -1514,8 +1544,8 @@ var simpleXrm = {
         } else {
             var features = "location=no,menubar=no,status=no,toolbar=no,resizable=yes";
             var url = Xrm.Page.context.getClientUrl();
-            window.open(url + "/main.aspx?etn=" + o.entityType.toLowerCase() + "&pagetype=entityrecord&extraqs=" + encodeURIComponent(o.extraqs.join("&")), "_blank", features,
-                false);
+            url += "/main.aspx?etn=" + o.entityType.toLowerCase() + "&pagetype=entityrecord&extraqs=" + encodeURIComponent(o.extraqs.join("&"));
+            window.open(url, "_blank", features, false);
         }
     },
     parseValue: function (s) {
@@ -1560,7 +1590,7 @@ var simpleXrm = {
         ///     roundingOptionCode: 2,
         ///     roundingOptionAmount: 5
         /// }) //returns 295; (307.70 * 0.95 = 292.315 which is rounded up to the nearest multiple of 5)
-        var round = true;
+        var round = true, p;
         if (o.roundingPolicyCode == 1) {
             round = false;
         };
