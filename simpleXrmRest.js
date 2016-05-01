@@ -1,5 +1,5 @@
 /// <summary>
-/// VERSION 1.7.2 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.5.1 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -64,8 +64,7 @@ var simpleXrmRest = {
         if (!window.JSON) {
             simpleXrmRest.fakeIt()
         };
-        var oDataUri = Xrm.Page.context.getClientUrl(),
-        XHR = {};
+        var oDataUri = Xrm.Page.context.getClientUrl();
         if (simpleXrm.valid(oDataUri)) {
             oDataUri += "/XRMServices/2011/OrganizationData.svc/" + a.query.toString();
             if (window.XMLHttpRequest) {
@@ -105,10 +104,10 @@ var simpleXrmRest = {
                 uri: oDataUri + a.parentEntity + "Set(guid'" + a.parentId + "')"
             };
             simpleXrmRest.XHR({
-                query:a.childEntity + "Set(guid'" + a.childId + "')/$links/" + a.childForeignKey,
+                query: a.childEntity + "Set(guid'" + a.childId + "')/$links/" + a.childForeignKey,
                 callback: function () {
                     if (this.readyState === 4) {
-                        this.onreadystatechange = null;
+                        req.onreadystatechange = null;
                         if (this.status === 204 || this.status === 1223) {
                             a.callback();
                         }
@@ -125,7 +124,7 @@ var simpleXrmRest = {
             method: "DELETE",
             callback: function () {
                 if (this.readyState === 4) {
-                    this.onreadystatechange = null;
+                    req.onreadystatechange = null;
                     if (this.status === 204 || this.status === 1223) {
                         a.callback();
                     }
@@ -159,7 +158,6 @@ var simpleXrmRest = {
         simpleXrmRest.XHR({
             query: simpleXrmRest.buildQuery({
                 entitySet: a.entity + "Set" || null,
-                guid: a.guid || null,
                 select: simpleXrmRest.select(a.select) || null,
                 filter: simpleXrmRest.filter(a.filter) || null,
                 orderBy: simpleXrmRest.orderBy(a.orderBy) || null,
@@ -176,7 +174,7 @@ var simpleXrmRest = {
     mapResults: function (o) {
         var map = o.map;
         var results = o.results;
-        for (var x in map) {
+        for (x in map) {
             if (!!results[x]) {
                 if (typeof results[x] === "object") {
                     if (!!results[x].Value) {
@@ -204,7 +202,6 @@ var simpleXrmRest = {
         /// </param>
         var q = "";
         var e = a.entitySet || null;
-        var g = a.guid || null;
         var s = a.select || null;
         var f = a.filter || null;
         var o = a.orderBy || null;
@@ -212,13 +209,7 @@ var simpleXrmRest = {
         var k = a.skip || null;
         var t = a.top || null;
         if (e) {
-            q += e.toString();
-        };
-        if (g) {
-            q += "(guid'" + simpleXrm.cleanGuid(g) + "')";
-        };
-        if (s || f || o || x || k || t) {
-            q += "?";
+            q += e.toString() + "?";
         };
         if (s) {
             q += s.toString();
@@ -255,59 +246,11 @@ var simpleXrmRest = {
         };
         return q;
     },
-    post: function (o) {
-        simpleXrm.query({
-            type: "POST",
-            method: "MERGE",
-            entity: o.entityType,
-            guid: o.id,
-            data: o.data,
-            callback: o.callback
-        })
-    },
-    postMultiple: function (o) {
-        /// <summary>simpleXrmRest.postMultiple() takes a single JSON payload and posts it to multiple targets using the CRM OData REST API.
-        /// Upon completion of *all* post events, it invokes a single callback. This is useful in cases where you need to update a parsing
-        /// attribute such as a boolean to filter a workflow or plugin before firing the workflow or plugin itself.</summary>
-        /// <param name="o.targets" type="Array">An array of objects with an 'id' property containing the record GUID and an 'entityType' 
-        /// property containing the entity logical name. (case sensitive)</param>
-        /// <param name="o.data" type="String">The JSON (or javascript object if you like) payload to be applied to all records in the targets array.</param>
-        /// <param name="o.callback" type="Function">The callback function to be invoked when all POST operations are completed.</param>
-        var ready = {},
-        a = o.targets;
-        //when all ready statements in the closure are true we can proceed with the callback
-        for (var i = 0, l1 = a.length; i < l1; i++) {
-            ready[a[i].id] = false; //load the ready object with the GUIDs of the records to be posted to
-        }
-        for (var j = 0, l2 = a.length; j < l2; j++) {
-            //post to each of the records
-            simpleXrmRest.post({
-                entity: a[j].entityType,
-                guid: a[j].id,
-                data: o.data,
-                callback: function () {
-                    if (simpleXrmRest.parseOnReady(this)) {
-                        var exit = false;
-                        ready[a[j].id] = true; //the ready object property matching the GUID for the record currently being posted to can be marked as true
-                        for (var k in ready) {
-                            if (!ready[k]) {
-                                exit = true; //cycle through all properties of ready, if any of the values are false set exit to true and break the loop  
-                                break;
-                            }
-                        };
-                        if (!exit) { //only invoke the callback if all the properties of ready are true
-                            o.callback
-                        }
-                    }
-                }
-            })
-        }
-    },
     buildFilter: function (a) {
         /// <summary>simpleXrmRest.buildFilter() takes a set of arguments and constructs a filter conforming to the CRM OData REST API.</summary>
-        /// <param name="a.attribute" type="String">The attribute that the query will use to filter results. (case sensitive)</param>
-        /// <param name="a.operator" type="String">The operator that the filter will use to filter. See list from SDK: http://msdn.microsoft.com/en-us/library/gg309461.aspx#BKMK_filter (case sensitive)</param>
-        /// <param name="a.value" type="String">The value that the operator will use to filter against the attribute. Strings must use "'double quote'" notation. (case sensitive)</param>
+        /// <param name="a" type="String">The attribute that the query will use to filter results. (case sensitive)</param>
+        /// <param name="o" type="String">The operator that the filter will use to filter. See list from SDK: http://msdn.microsoft.com/en-us/library/gg309461.aspx#BKMK_filter (case sensitive)</param>
+        /// <param name="v" type="String">The value that the operator will use to filter against the attribute. Strings must use "'double quote'" notation. (case sensitive)</param>
         if (arguments && arguments.length > 0 && arguments[0]) {
             var filter = "";
             if (a.operator === "startswith" || a.operator === "substringof" || a.operator === "endswith") {
@@ -370,10 +313,10 @@ var simpleXrmRest = {
         /// <param name="arguments[i] (where i > 0)" type="String">The name of the attribute(s) on the related (expanded) entity to be returned. Add an additional argument for each parameter from this relationship. (case sensitive)</param>
         if (arguments && arguments.length > 0 && arguments[0]) {
             var y = [];
-        for (var i = 1; i < arguments.length; i++) {
-            y.push(x.toString() + "/" + arguments[i].toString());
-        }
-        return simpleXrm.link(y, ",");
+            for (var i = 1; i < arguments.length; i++) {
+                y.push(x.toString() + "/" + arguments[i].toString());
+            }
+            return simpleXrm.link(y, ",");
         } else {
             return "";
         }
@@ -478,7 +421,7 @@ var simpleXrmRest = {
         var y = null;
         var a = simpleXrmRest.parseOnReady(x);
         if (simpleXrm.valid(a)) {
-            y = a;
+            var y = a;
         }
         return y;
     },
@@ -629,6 +572,8 @@ var simpleXrmRest = {
                                     } catch (e) {
                                         simpleXrm.timedFormError("The callback function could not be invoked.", 3000)
                                     }
+                                } else {
+                                    simpleXrm.timedFormError("The Price List Item could not be loaded.", 3000)
                                 }
                             }
                         });

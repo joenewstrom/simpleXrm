@@ -1,5 +1,5 @@
 /// <summary>
-/// VERSION 1.7.2 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.5.0 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -41,7 +41,7 @@ var simpleXrmSoap = {
         return line;
     },
     decodeXML: function (f) {
-        if (typeof(f) != "string") {
+        if (typeof (f) != "string") {
             f = f.toString();
         }
         return f;
@@ -58,7 +58,7 @@ var simpleXrmSoap = {
                 + "the requested scripts. Please attempt using FireFox or IE 8+");
             return null;
         };
-        XHR.open("POST", encodeURI(url), true);
+        XHR.open("POST", encodeURI(url), false);
         XHR.setRequestHeader("Accept", "application/xml, text/xml, */*");
         XHR.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
         XHR.setRequestHeader("SOAPAction", "http://schemas.microsoft.com/xrm/2011/Contracts/Services/IOrganizationService/Execute");
@@ -66,7 +66,6 @@ var simpleXrmSoap = {
         XHR.send(a.request);
     },
     normalizeResults: function (x) {
-        var xmlDoc, parser;
         if (x.responseText) {
             if (window.DOMParser) {
                 parser = new DOMParser();
@@ -78,59 +77,88 @@ var simpleXrmSoap = {
                 xmlDoc.async = false;
                 xmlDoc.loadXML(x.responseText);
             }
+
         }
         return xmlDoc;
     },
     getRetrieveMultipleResults: function (x) { //needs work :|
-        var a = null;
         if (simpleXrmSoap.parseOnReady(x)) {
-            a = simpleXrmSoap.parseFetchResponse(
-                simpleXrmSoap.normalizeResults(x)
-            )
+            var a = null;
+            if (x.responseXML) {
+                x = x.responseXML; //#document
+                if (x.childNodes) {
+                    var x = x.childNodes[0]; //s:Envelope
+                    if (x.localName === "Envelope" && x.childNodes) {
+                        var x = x.childNodes[0]; //s:Body
+                        if (x.localName === "Body" && x.childNodes) {
+                            var x = x.childNodes[0]; //ExecuteResponse
+                            if (x.localName === "ExecuteResponse" && x.childNodes) {
+                                var x = x.childNodes[0]; //ExecuteResult
+                                if (x.localName === "ExecuteResult" && x.childNodes) {
+                                    var y = x.childNodes[0]; //ResponseName
+                                    var z = x.childNodes[1];
+                                    if (y.localName === "ResponseName" && y.textContent === "RetrieveMultiple" && z.childNodes && z.childNodes.length === 1
+                                        && z.childNodes[0].childNodes) {
+                                        a = [];
+                                        for (var i = 0; i < z.childNodes[0].childNodes.length; i++) {
+                                            a.push(simpleXrmSoap.normalizeResults(z.childNodes[0].childNodes[i]))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return a;
         }
-        return a;
     },
     parseFetchResponse: function (x) {
-        x = x.getElementsByTagName("ExecuteResult")
-        if (x && x[0]) {
-            x = x[0];
-            if (x.childNodes && x.childNodes[0]
-                && x.childNodes.length === 2) {
-                if (x.childNodes && x.childNodes[0] && x.childNodes[0].childNodes && x.childNodes[0].childNodes[0]
-                    && x.childNodes[0].childNodes[0].nodeValue === "RetrieveMultiple") {
-                    x = x.childNodes[1]; //Results
-                    if (x.childNodes && x.childNodes[0] && x.childNodes[0].localName === "KeyValuePairOfstringanyType") {
-                        x = x.childNodes[0]; //KeyValuePairOfstringanyType
-                        if (x.childNodes && x.childNodes.length === 2 && x.childNodes[0].localName === "key" 
-                            && x.childNodes[0].childNodes[0].nodeValue === "EntityCollection" && x.childNodes[1].localName === "value") {
-                            x = x.childNodes[1]; //value
-                            if (x.childNodes[1] && x.childNodes[1].childNodes) {
-                                x = x.childNodes[0]; //Entities
-                                if (x.childNodes && x.childNodes && x.childNodes.length > 0) {
-                                    var results = [];
-                                    for (var i = 0; i < x.childNodes.length; i++) {
-                                        var id = x.childNodes[i].childNodes[3];
-                                        var logicalName = x.childNodes[i].childNodes[5];
-                                        var result = {
-                                            attributes: {},
-                                            id: id.childNodes[0].nodeValue,
-                                            logicalName: logicalName.childNodes[0].nodeValue,
-                                            relatedEntities: []
-                                        }
-                                        for (var j = 0; j < x.childNodes[i].childNodes[0].childNodes.length; j++) {
-                                            var y = x.childNodes[i].childNodes[0].childNodes[j].childNodes[0].childNodes[0].nodeValue;
-                                            var z = x.childNodes[i].childNodes[0].childNodes[j].childNodes[1].childNodes[0].nodeValue;
-                                            if (!z && x.childNodes[i].childNodes[0].childNodes[j].childNodes[1] //value 
-                                                && x.childNodes[i].childNodes[0].childNodes[j].childNodes[1].childNodes[0] //Value
-                                                && x.childNodes[i].childNodes[0].childNodes[j].childNodes[1].childNodes[0].childNodes[0].nodeValue) {
-                                                z = x.childNodes[i].childNodes[0].childNodes[j].childNodes[1].childNodes[0].childNodes[0].nodeValue;
-                                                if (Number(z)) {
-                                                    z = Number(z);
+        var r = [];
+        if (x.childNodes && x.childNodes.length === 1) {
+            x = x.childNodes[0]; //Envelope
+            if (x.childNodes && x.childNodes.length === 1) {
+                x = x.childNodes[0]; //Body
+                if (x.childNodes && x.childNodes.length === 1) {
+                    x = x.childNodes[0]; //ExecuteResponse
+                    if (x.childNodes && x.childNodes.length === 1) {
+                        x = x.childNodes[0]; //ExecuteResult
+                        if (x.childNodes && x.childNodes[0]
+                            && x.childNodes.length === 2) {
+                            if (x.childNodes && x.childNodes[0] && x.childNodes[0].childNodes && x.childNodes[0].childNodes[0]
+                                && x.childNodes[0].childNodes[0].nodeValue === "RetrieveMultiple") {
+                                x = x.childNodes[1]; //KeyValuePairOfstringanyType
+                                if (x.childNodes && x.childNodes[0]) {
+                                    x = x.childNodes[0]; //value
+                                    if (x.childNodes[1] && x.childNodes[1].childNodes
+                                        && x.childNodes[0].childNodes[0].nodeValue === "EntityCollection") {
+                                        x = x.childNodes[1];
+                                        if (x.childNodes && x.childNodes[0]) {
+                                            x = x.childNodes[0];
+                                            if (x.childNodes) {
+                                                var results = [];
+                                                for (var i = 0; i < x.childNodes.length; i++) {
+                                                    var result = {
+                                                        attributes: {},
+                                                        id: x.childNodes[i].childNodes[3].childNodes[0].nodeValue,
+                                                        logicalName: x.childNodes[i].childNodes[4].childNodes[0].nodeValue,
+                                                        relatedEntities: []
+                                                    }
+                                                    for (var j = 0; j < x.childNodes[i].childNodes[0].childNodes.length; j++) {
+                                                        var y = x.childNodes[i].childNodes[0].childNodes[j].childNodes[0].childNodes[0].nodeValue;
+                                                        var z = x.childNodes[i].childNodes[0].childNodes[j].childNodes[1].childNodes[0].nodeValue;
+                                                        result.attributes[y] = simpleXrm.parseValue(z);
+                                                    }
+                                                    for (var k = 0; k < x.childNodes[i].childNodes[2].childNodes.length; k++) {
+                                                        var y = x.childNodes[i].childNodes[2].childNodes[k].childNodes[0].childNodes[0].nodeValue;
+                                                        var z = x.childNodes[i].childNodes[2].childNodes[k].childNodes[1].childNodes[0].nodeValue;
+                                                        result.attributes[y] = simpleXrm.parseValue(z);
+                                                    }
+                                                    results.push(result);
                                                 }
+                                                return results;
                                             }
-                                            result.attributes[y] = z;
-                                        };
-                                        results.push(result);
+                                        }
                                     }
                                 }
                             }
@@ -139,132 +167,13 @@ var simpleXrmSoap = {
                 }
             }
         }
-        if (!results) {
-            console.log("Results could not be returned from the FetchXML Request.")
-        }
-        return results || null; 
     },
     getFetchResults: function (x) {
         if (simpleXrmSoap.parseOnReady(x)) {
             var response = simpleXrmSoap.normalizeResults(x);
-            var results = null;
-            if (response && response.childNodes) {
-                results = simpleXrmSoap.jsonify(response.childNodes[0]);
-            }
+            var results = simpleXrmSoap.parseFetchResponse(response);
             return results;
         }
-    },
-    jsonify: function (x) {
-        var _parseKVP = function (w) {
-            if (w && w.childNodes && w.childNodes.length === 2 && 
-            ((w.childNodes[0].localName === "key" && 
-            w.childNodes[1].localName === "value") || 
-            (w.childNodes[0].localName === "value" && 
-            w.childNodes[1].localName === "key"))) {
-                var t = {}, u, v;
-                for (var i = 0, len = w.childNodes.length; i < len; i++) {
-                    if (w.childNodes[i].localName === "key" && w.childNodes[i].childNodes[0]) {
-                        u = w.childNodes[i].childNodes[0].nodeValue;
-                    } else if (w.childNodes[i].localName === "value" && w.childNodes[i].childNodes[0]) {
-                        v = _parseNode(w.childNodes[i].childNodes[0])
-                    }
-                };
-                t[u] = v;
-                return t;
-            }
-        };
-        var _isArray = function (a) {
-            return (a.__proto__.constructor === Array || a.constructor === Array || a.constructor === HTMLCollection || a.__proto__.constructor === HTMLCollection);
-        };
-        var _isObject = function (b) {
-            return (b.__proto__.constructor === Object || b.constructor === Object || b.constructor === HTMLElement || b.__proto__.constructor === HTMLElement);
-        }
-        var _parseNode = function (y) {
-            var z = {};
-            if (y && y.localName && y.localName === "KeyValuePairOfstringanyType") {
-                z = _parseKVP(y)
-            } else if (y && y.localName && y.localName === "value" && y.nodeValue) {
-                z = y.nodeValue
-            } else if (y && y.localName && y.childNodes) {
-                var s = [];
-                for (var i = 0, len = y.childNodes.length; i < len; i++) {
-                    s.push(_parseNode(y.childNodes[i]))
-                }
-                var loop = 0;
-                while (loop < 10 && s && _isArray(s) && s.length === 1) {
-                    s = s[0];
-                    loop++;
-                }
-                z[y.localName] = s;
-            } else if (y && y.localName && y.nodeValue) {
-                z[y.localName] = y.nodeValue
-            } else if (y && !y.localName && y.nodeValue) {
-                z = y.nodeValue
-            } else if (y && _isArray(y) && y.length === 1) {
-                  z = _parseNode(y[0])
-            }
-            return z;
-        };
-        var _parseAttributes = function (m) {
-            var n = {};
-            if (_isArray(m) && m.length > 0) {
-                for (var i = 0, len = m.length; i < len; i++) {
-                    if (_isObject(m[i])) {
-                        for (var j in m[i]) {
-                            n[j] = m[i][j]
-                        }
-                    }
-                }
-                return n;
-            }
-        };
-        var _parseEntityCollection = function (o) {
-            var p = {};            
-            if (o && o.Entities && o.Entities.Entity) {
-                p = [o.Entities.Entity];
-            } else if (o && o.Entities && _isArray(o) && o.Entities.length > 0) {
-                p = o.Entities;
-            } else {
-                console.log ("Something unexpected happened.")
-            };
-            return p;
-        };
-        var _parseEntities = function (q) {
-            var r = [];
-            if (q && (q.constructor === Array || q.constructor === HTMLCollection) && q.length > 0) {
-                for (var i = 0, len = q.length; i < len; i++) {
-                    var s = _parseEntity(q[i]);
-                    r.push(s);
-                }
-            }
-            return r;            
-        };
-        var _parseEntity = function (a) {
-            var b = {};
-            if (a.constructor === Array || a.constructor === HTMLCollection) {
-                for (var i = 0, len = a.length; i < len; i++) {
-                    if (a[i].Attributes) {
-                        b.attributes = _parseAttributes(a[i].Attributes);
-                    } else if (a[i].constructor === Object || a[i].constructor === HTMLElement) {
-                        for (var j in a[i]) {
-                            b[j] = _parseNode(a[i][j]);
-                        }
-                    }
-                }
-            } else if (a.constructor === Object || a.constructor === HTMLElement) {
-                for (var j in a) {
-                    b[j] = _parseNode(a[j]);
-                }       
-            }
-            return b;            
-        };
-        var results = x.getElementsByTagName("a:Entities");
-        if (results) {
-            results = _parseNode(results);
-        };
-        results = _parseEntityCollection(results);
-        results = _parseEntities(results);
-        return results || null;
     },
     retrieveMultiple: function (a) {
         var f = simpleXrmSoap.encodeXML(a.fetch);
@@ -411,4 +320,4 @@ var simpleXrmSoap = {
             callback: a.callback
         })
     }
-};
+}
