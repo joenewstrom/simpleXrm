@@ -1,4 +1,4 @@
-/// VERSION 1.7.1 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.7.2 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -15,7 +15,7 @@
 
 /*if (!Xrm) {
     var Xrm = window.Xrm || window.parent.Xrm || { _namespace: true };
-    //include above statement in any webresources in order to successfully access simpleXrm namespace.
+    //include above statement in any html webresources in order to successfully access any of the simpleXrm namespaces.
 }*/
 
 var simpleXrm = {
@@ -1498,8 +1498,8 @@ var simpleXrm = {
         /// </param>
         Xrm.Page.data.refresh(b)
     },
-    backgroundSave: function () {
-        Xrm.Page.data.save()
+    backgroundSave: function (o) {
+        Xrm.Page.data.save().then(o.callback, o.failure); 
     },
     getRelatedLinks: function () {
         return Xrm.Page.ui.navigation.items;
@@ -1927,11 +1927,59 @@ var simpleXrmRest = {
         };
         return q;
     },
+    post: function (o) {
+        simpleXrm.query({
+            type: "POST",
+            method: "MERGE",
+            entity: o.entityType,
+            guid: o.id,
+            data: o.data,
+            callback: o.callback
+        })
+    },
+    postMultiple: function (o) {
+        /// <summary>simpleXrmRest.postMultiple() takes a single JSON payload and posts it to multiple targets using the CRM OData REST API.
+        /// Upon completion of *all* post events, it invokes a single callback. This is useful in cases where you need to update a parsing
+        /// attribute such as a boolean to filter a workflow or plugin before firing the workflow or plugin itself.</summary>
+        /// <param name="o.targets" type="Array">An array of objects with an 'id' property containing the record GUID and an 'entityType' 
+        /// property containing the entity logical name. (case sensitive)</param>
+        /// <param name="o.data" type="String">The JSON (or javascript object if you like) payload to be applied to all records in the targets array.</param>
+        /// <param name="o.callback" type="Function">The callback function to be invoked when all POST operations are completed.</param>
+        var ready = {},
+        a = o.targets;
+        //when all ready statements in the closure are true we can proceed with the callback
+        for (var i = 0, l1 = a.length; i < l1; i++) {
+            ready[a[i].id] = false; //load the ready object with the GUIDs of the records to be posted to
+        }
+        for (var j = 0, l2 = a.length; j < l2; j++) {
+            //post to each of the records
+            simpleXrmRest.post({
+                entity: a[j].entityType,
+                guid: a[j].id,
+                data: o.data,
+                callback: function () {
+                    if (simpleXrmRest.parseOnReady(this)) {
+                        var exit = false;
+                        ready[a[j].id] = true; //the ready object property matching the GUID for the record currently being posted to can be marked as true
+                        for (var k in ready) {
+                            if (!ready[k]) {
+                                exit = true; //cycle through all properties of ready, if any of the values are false set exit to true and break the loop  
+                                break;
+                            }
+                        };
+                        if (!exit) { //only invoke the callback if all the properties of ready are true
+                            o.callback
+                        }
+                    }
+                }
+            })
+        }
+    },
     buildFilter: function (a) {
         /// <summary>simpleXrmRest.buildFilter() takes a set of arguments and constructs a filter conforming to the CRM OData REST API.</summary>
-        /// <param name="a" type="String">The attribute that the query will use to filter results. (case sensitive)</param>
-        /// <param name="o" type="String">The operator that the filter will use to filter. See list from SDK: http://msdn.microsoft.com/en-us/library/gg309461.aspx#BKMK_filter (case sensitive)</param>
-        /// <param name="v" type="String">The value that the operator will use to filter against the attribute. Strings must use "'double quote'" notation. (case sensitive)</param>
+        /// <param name="a.attribute" type="String">The attribute that the query will use to filter results. (case sensitive)</param>
+        /// <param name="a.operator" type="String">The operator that the filter will use to filter. See list from SDK: http://msdn.microsoft.com/en-us/library/gg309461.aspx#BKMK_filter (case sensitive)</param>
+        /// <param name="a.value" type="String">The value that the operator will use to filter against the attribute. Strings must use "'double quote'" notation. (case sensitive)</param>
         if (arguments && arguments.length > 0 && arguments[0]) {
             var filter = "";
             if (a.operator === "startswith" || a.operator === "substringof" || a.operator === "endswith") {
@@ -2345,7 +2393,7 @@ var simpleXrmFetch = {
                         f += "<condition attribute='" + x.attribute + "' operator='" + o.conditions[i].operator + "'"; 
                         if (x.operator === "in" || x.operator === "not-in") {
                             if (x.values) {
-                                f += "/>"
+                                f += ">"
                                 for (var j = 0; j < x.values.length; j++) {
                                     var y = x.values[j];
                                     f += "<value";
@@ -2518,7 +2566,7 @@ var simpleXrmMaps = {
         var XHR;
         var start = o.wayPoints[0];
         var end = o.wayPoints[o.wayPoints.length - 1];
-        var uri = "https:\/\/crossorigin.me\/https:\/\/ecn.dev.virtualearth.net\/REST\/v1\/Routes?";
+        var uri = "https:\/\/ecn.dev.virtualearth.net\/REST\/v1\/Routes?";
         var route = [];
         for (var i = 0; i < o.wayPoints.length; i++) {
             var w = o.wayPoints[i];
@@ -2562,7 +2610,7 @@ var simpleXrmMaps = {
     },
     getLocation: function (o) {
         var XHR;
-        var uri = "https:\/\/crossorigin.me\/https:\/\/ecn.dev.virtualearth.net\/REST\/v1\/Locations?";
+        var uri = "https:\/\/ecn.dev.virtualearth.net\/REST\/v1\/Locations?";
         if (o.address) {
             uri += "q=" + o.address;
         } else {
