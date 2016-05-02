@@ -85,7 +85,6 @@ var simpleXrm = {
         /// simpleXrm.valid() returns true if the argument 'a' is a valid argument. This method can often be shortcutted by using native JavaScript coersion, 
         /// or the double-negative operator '!!' which explicitly evaluates !!x to either true or false. simpleXrm.valid(a) is usually
         /// equivalent to !!a with the notable exception of numerical fields which will return false when equal to zero
-        ///
         ///</summary>
         ///<parameter name="a" type="Argument">the argument that is checked for validity in the DOM/Xrm collection(s)</parameter>
         return (a != null && a != undefined);
