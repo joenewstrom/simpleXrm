@@ -1487,7 +1487,15 @@ var simpleXrm = {
         Xrm.Page.data.refresh(b)
     },
     backgroundSave: function (o) {
-        Xrm.Page.data.save().then(o.callback, o.failure); 
+        if (o && o.callback) {
+            if (o.failure) {
+                Xrm.Page.data.save().then(o.callback, o.failure);
+            } else {
+                Xrm.Page.data.save().then(o.callback)
+            }
+        } else {
+            Xrm.Page.data.save()
+        }
     },
     getRelatedLinks: function () {
         return Xrm.Page.ui.navigation.items;
