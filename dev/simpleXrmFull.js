@@ -1,4 +1,4 @@
-/// VERSION 1.7.2 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
+/// VERSION 1.7.3 - MIT License (see License File at https://github.com/joenewstrom/simpleXrm)
 /// simpleXrm.js is a lightweight general purpose library intended to compress both the time and the volume of code required to author form scripts in Dynamics CRM using the javascript API as documented in the CRM 2013 SDK.
 /// In order to use the library, simply reference the methods below in your form scripts libraries (including the simpleXrm namespace), and include the minified production version of simpleXrm.js to your form's libraries.
 /// To avoid runtime errors, ensure that simpleXrm.js is loaded before all libraries that reference it by moving it above those libraries in the form libraries section of the form properties UI.
@@ -529,6 +529,11 @@ var simpleXrm = {
         simpleXrm.getAllCtrls(a).forEach(function (x, i) {
             x.removeOption(o);
         });
+    },
+    addOption: function (a, o) {
+        simpleXrm.getAllCtrls(a).forEach(function (x, i) {
+            x.addOption(o);
+        })
     },
     showAllCtrls: function () {
         /// <summary>
